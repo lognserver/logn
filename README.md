@@ -1,6 +1,6 @@
 # Logn Server
 
-Developer-focused Blazor tools for troubleshooting OpenID Connect:
+Developer-focused tools for troubleshooting OpenID Connect:
 
 * **Error Explainer** – lookup any OIDC error code with plain-language fixes.  
   Route: `/explain`
