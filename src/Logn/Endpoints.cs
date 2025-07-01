@@ -26,6 +26,7 @@ public static class Endpoints
     private static readonly string[] GrantTypes = ["authorization_code", "client_credentials", "refresh_token"];
     private static readonly string KeyId = Guid.NewGuid().ToString("N");
     private static readonly byte[] KeyBytes = "A_super_secret_key_123!AND_IT_IS_LONG_ENOUGH"u8.ToArray();
+    private static readonly string LoginPath = "/simulator-login";
 
     private static readonly SymmetricSecurityKey SecurityKey = new(KeyBytes)
     {
@@ -45,7 +46,7 @@ public static class Endpoints
             await context.Response.WriteAsJsonAsync(response);
         });
 
-        app.MapGet("/login", async (httpContext) =>
+        app.MapGet("/simulator-login", async (httpContext) =>
         {
             var page = $"""
                          <html>
@@ -67,7 +68,7 @@ public static class Endpoints
                                      Credentials here aren't verified against a real user store.
                                  </p>
                          
-                                 <form method="post" action="/login" class="space-y-4">
+                                 <form method="post" action="/simulator-login" class="space-y-4">
                                      <div>
                                          <label class="block text-sm font-medium text-slate-700 mb-1" for="username">
                                              Username
@@ -101,7 +102,7 @@ public static class Endpoints
             await httpContext.Response.WriteAsync(page, Encoding.UTF8);
         });
 
-        app.MapPost("/login", async (HttpContext httpContext) =>
+        app.MapPost("/simulator-login", async (HttpContext httpContext) =>
         {
             var form = httpContext.Request.Form;
             string? username = form["username"];
@@ -168,7 +169,7 @@ public static class Endpoints
             {
                 // go to login page with return URL
                 var loginUrl =
-                    $"/login?returnUrl={Uri.EscapeDataString(httpContext.Request.Path + httpContext.Request.QueryString)}";
+                    $"/{LoginPath.Trim('/')}?returnUrl={Uri.EscapeDataString(httpContext.Request.Path + httpContext.Request.QueryString)}";
                 return Results.Redirect(loginUrl);
             }
 
