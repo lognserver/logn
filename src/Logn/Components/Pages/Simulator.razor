@@ -1,0 +1,261 @@
+@*
+  Copyright (c) 2025 Codefrog
+  Business Source License 1.1 – see LICENSE.txt for details.
+  Change Date: 2029-07-01   Change License: Apache-2.0
+*@
+
+@rendermode InteractiveServer
+@page "/simulator"
+@page "/simulator/callback"
+@using Microsoft.Extensions.Options
+
+<div class="container mx-auto px-4 py-8">
+    <h3 class="text-3xl font-bold mb-6 text-gray-700">OIDC Flow Simulation</h3>
+    <div class="mb-8 flex justify-between items-center">
+        <div class="flex flex-col items-center text-center">
+            <div class="flex items-center justify-center w-10 h-10 rounded-full 
+                        @(CurrentStep == OidcStep.ReadyToLogin ? "bg-blue-500 text-white" : (CurrentStep > OidcStep.ReadyToLogin ? "bg-green-500 text-white" : "bg-gray-300 text-gray-700")) 
+                        font-bold">
+                1
+            </div>
+            <span class="mt-2 text-sm text-gray-600">Ready to Login</span>
+        </div>
+        <Bar/>
+        <div class="flex flex-col items-center text-center">
+            <div class="flex items-center justify-center w-10 h-10 rounded-full 
+                        @(CurrentStep == OidcStep.AuthorizationCodeReceived ? "bg-blue-500 text-white" : (CurrentStep > OidcStep.AuthorizationCodeReceived ? "bg-green-500 text-white" : "bg-gray-300 text-gray-700")) 
+                        font-bold">
+                2
+            </div>
+            <span class="mt-2 text-sm text-gray-600">Auth Code</span>
+        </div>
+        <Bar/>
+
+        <div class="flex flex-col items-center text-center">
+            <div class="flex items-center justify-center w-10 h-10 rounded-full 
+                        @(CurrentStep == OidcStep.TokenReceived ? "bg-blue-500 text-white" : (CurrentStep > OidcStep.TokenReceived ? "bg-green-500 text-white" : "bg-gray-300 text-gray-700")) 
+                        font-bold">
+                3
+            </div>
+            <span class="mt-2 text-sm text-gray-600">Token Exchange</span>
+        </div>
+        <Bar/>
+
+        <div class="flex flex-col items-center text-center">
+            <div class="flex items-center justify-center w-10 h-10 rounded-full 
+                        @(CurrentStep == OidcStep.CallbackComplete ? "bg-blue-500 text-white" : (CurrentStep > OidcStep.CallbackComplete ? "bg-green-500 text-white" : "bg-gray-300 text-gray-700")) 
+                        font-bold">
+                4
+            </div>
+            <span class="mt-2 text-sm text-gray-600">Callback</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-6">
+        <div class="col-span-12 md:col-span-6 bg-white shadow rounded p-6">
+            @if (CurrentStep == OidcStep.ReadyToLogin)
+            {
+                <div>
+                    <p class="text-xl font-semibold text-gray-700 mb-4">Step 1: Login Prompt</p>
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded shadow"
+                            @onclick="HandleLogin">
+                        Login
+                    </button>
+                </div>
+            }
+            else if (CurrentStep == OidcStep.AuthorizationCodeReceived)
+            {
+                <div>
+                    <p class="text-xl font-semibold text-gray-700 mb-4">Step 2: Authorization Code Received</p>
+                    <button class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded shadow"
+                            @onclick="ContinueToTokenExchange">
+                        Continue to Token Exchange
+                    </button>
+                </div>
+            }
+            else if (CurrentStep == OidcStep.TokenReceived)
+            {
+                <div>
+                    <p class="text-xl font-semibold text-gray-700 mb-4">Step 3: Token Exchange Complete</p>
+                    <button class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded shadow"
+                            @onclick="SimulateCallback">
+                        Simulate Callback
+                    </button>
+                </div>
+            }
+            else if (CurrentStep == OidcStep.CallbackComplete)
+            {
+                <div>
+                    <p class="text-xl font-semibold text-gray-700 mb-2">Step 4: Callback with Auth Token</p>
+                    <p class="text-green-600 font-bold">You are fully logged in (simulation)!</p>
+                </div>
+            }
+        </div>
+
+        <div class="col-span-12 md:col-span-6 bg-white shadow rounded p-6">
+            <h5 class="text-lg font-bold text-gray-700 mb-4">Debug Information</h5>
+
+            <div class="mb-4">
+                <p class="font-semibold text-gray-600">Current Step:</p>
+                <p class="text-gray-800">@CurrentStep</p>
+            </div>
+
+            @if (AuthCode is not null)
+            {
+                <div class="mb-4">
+                    <p class="font-semibold text-gray-600">Authorization Code:</p>
+                    <p class="text-gray-800">@AuthCode</p>
+                </div>
+            }
+            @if (AuthToken is not null)
+            {
+                <div class="mb-4">
+                    <p class="font-semibold text-gray-600">Auth Token (JWT):</p>
+                    <p class="text-gray-800 break-words">@AuthToken</p>
+                </div>
+            }
+
+            <hr class="my-6"/>
+
+            <h5 class="text-lg font-bold text-gray-700 mb-2">What happens next?</h5>
+            @switch (CurrentStep)
+            {
+                case OidcStep.ReadyToLogin:
+                    <p class="text-gray-600">Next step will redirect user to the OIDC provider to get an authorization
+                        code.</p>
+                    break;
+                case OidcStep.AuthorizationCodeReceived:
+                    <p class="text-gray-600">Next step is to exchange the code for an ID token/Access token.</p>
+                    break;
+                case OidcStep.TokenReceived:
+                    <p class="text-gray-600">Next step is to handle the provider callback with the token.</p>
+                    break;
+                case OidcStep.CallbackComplete:
+                    <p class="text-gray-600">Simulation complete. This is where you'd store tokens, claims, etc.</p>
+                    break;
+            }
+        </div>
+        @if (OpenIdError is not null)
+        {
+            <div class="col-span-12 md:col-span-6 bg-red-100 text-red-800 shadow rounded p-6">
+                <h5 class="text-lg font-bold mb-2">Error</h5>
+                <p>@OpenIdError.Error</p>
+                <p class="mt-2">@OpenIdError.ErrorDescription</p>
+                @if (!string.IsNullOrEmpty(OpenIdError.ErrorUri))
+                {
+                    <p class="mt-2">
+                        <a href="@OpenIdError.ErrorUri" target="_blank" class="text-blue-600 hover:underline">
+                            More details
+                        </a>
+                    </p>
+                }
+                else
+                {
+                    <p class="mt-2">
+                        <a href="@($"/explain?error={OpenIdError.Error}")" target="_blank" class="text-blue-600 hover:underline">
+                            Explain this error
+                        </a>
+                    </p>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+
+    [Inject] public required LognClient LognClient { get; set; }
+
+    [Inject] public required NavigationManager NavigationManager { get; set; }
+
+    private enum OidcStep
+    {
+        ReadyToLogin,
+        AuthorizationCodeReceived,
+        TokenReceived,
+        CallbackComplete
+    }
+
+    [Inject] public required IOptions<LognOptions> Options { get; set; }
+    private OidcStep CurrentStep { get; set; } = OidcStep.ReadyToLogin;
+    private string? AuthCode { get; set; }
+    private string? AuthToken { get; set; }
+    private string? Authority { get; set; }
+    private string ClientId { get; set; } = "FakeClientId123";
+    private OidcErrorResponse? OpenIdError { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        // Check if we're on the "/simulator/callback" route
+        var uri = new Uri(NavigationManager.Uri);
+        if (uri.AbsolutePath.EndsWith("/simulator/callback", StringComparison.OrdinalIgnoreCase))
+        {
+            // We likely just returned from the OIDC provider.
+            var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+
+            // If there's a 'code' in the query, store it and update the flow step.
+            if (query.TryGetValue("code", out var codeParam))
+            {
+                AuthCode = codeParam;
+                CurrentStep = OidcStep.AuthorizationCodeReceived;
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleLogin()
+    {
+        var authorizeUrl = await LognClient.GetAuthorizeUriAsync(new AuthorizationRequest
+        {
+            ClientId = ClientId,
+            RedirectUri = $"{Authority ?? Options.Value.Authority}/simulator/callback",
+            ResponseType = "code",
+            Scope = "openid profile email",
+            State = "FakeState123"
+        });
+
+        NavigationManager.NavigateTo(authorizeUrl.ToString(), forceLoad: true);
+    }
+
+    private async Task ContinueToTokenExchange()
+    {
+        if (AuthCode is null)
+        {
+            throw new InvalidOperationException("No authorization code received.");
+        }
+
+        try
+        {
+            var tokenResponse = await LognClient.RequestTokenAsync(new TokenRequest
+            {
+                ClientId = ClientId,
+                Code = AuthCode,
+                RedirectUri = $"{Authority ?? Options.Value.Authority}/simulator/callback",
+                GrantType = "authorization_code"
+            });
+
+            AuthToken = tokenResponse.AccessToken;
+            CurrentStep = OidcStep.TokenReceived;
+        }
+        catch (OidcException e)
+        {
+            OpenIdError = e.Error;
+        }
+        catch (Exception e)
+        {
+            OpenIdError = new OidcErrorResponse()
+            {
+                Error = $"HTTP Request failed: {e.Message}",
+                ErrorDescription = "An error occurred while trying to exchange the authorization code for a token.",
+            };
+        }
+    }
+
+    private void SimulateCallback()
+    {
+        // Simulate receiving the callback with the token
+        CurrentStep = OidcStep.CallbackComplete;
+    }
+
+}

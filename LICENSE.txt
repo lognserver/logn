@@ -1,0 +1,68 @@
+                     Business Source License 1.1
+
+Parameters
+----------
+Licensor:            Cody Mullins / Codefrog  
+Licensed Work:       Logn – the complete identity platform for Blazor, including
+                     all source code and accompanying assets in this repository.
+Additional Use Grant: Any non-production, internal evaluation or personal use.  
+Change Date:         1 July 2029   (four years after the initial publication)  
+Change License:      Apache License, Version 2.0
+
+Terms
+-----
+Definitions
+1.  The “Licensed Work” is the software made available by the Licensor under
+    this License, including source code, object code, and documentation.
+2.  “Licensee” means you.
+3.  “Change Date” is the date specified under the Parameters on which the
+    Change License takes effect.
+4.  The “Change License” is the license specified under the Parameters that
+    will govern the Licensed Work after the Change Date.
+5.  “Additional Use Grant” means the permission specified under the Parameters
+    for use of the Licensed Work outside the Scope defined below.
+6.  “Scope” means use of the Licensed Work within any software whose primary
+    purpose is **NOT** the same as that of the Licensed Work and which does not
+    expose substantially the same API.
+
+License Grant
+Subject to the terms and conditions of this License, Licensor hereby grants
+Licensee a worldwide, non-exclusive, non-transferable, non-sublicensable,
+royalty-free, revocable license to copy, modify, create derivative works,
+compile, and run the Licensed Work **within the Scope**.
+
+Outside the Scope
+Use of the Licensed Work **outside the Scope** is permitted only to the extent
+described by the Additional Use Grant. All other use outside the Scope before
+the Change Date requires a separate commercial license from the Licensor.
+
+Change Date
+From and after the Change Date, the Licensed Work will be governed by the
+Change License, and this License will cease to apply.
+
+Notices
+All copies of the Licensed Work must include (i) a copy of this License, and
+(ii) a notice stating that the Licensed Work is subject to the Business Source
+License 1.1 until the Change Date and thereafter to the Change License.
+
+Disclaimer
+THE LICENSED WORK IS PROVIDED “AS IS”. LICENSOR DISCLAIMS ALL WARRANTIES,
+EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+TO THE EXTENT PERMITTED BY APPLICABLE LAW, LICENSOR SHALL NOT BE LIABLE FOR
+ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT, OR OTHERWISE,
+ARISING FROM, OUT OF, OR IN CONNECTION WITH THE LICENSED WORK OR THE USE OR
+OTHER DEALINGS IN THE LICENSED WORK.
+
+Termination
+If Licensee breaches this License, it automatically terminates. Upon
+termination, Licensee must cease all use, reproduction, or distribution of the
+Licensed Work and must destroy all copies.
+
+Governing Law
+This License is governed by and interpreted in accordance with the laws of
+⟨the Commonwealth of Virginia, United States⟩, excluding its conflict-of-law
+rules.
+
+---------------------------------- END ----------------------------------
+

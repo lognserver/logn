@@ -1,0 +1,167 @@
+@*
+  Copyright (c) 2025 Codefrog
+  Business Source License 1.1 – see LICENSE.txt for details.
+  Change Date: 2029-07-01   Change License: Apache-2.0
+*@
+
+@page "/explain"
+@using System.Net
+
+<section class="max-w-lg mx-auto mt-10 p-6 bg-white/70 backdrop-blur-md shadow-lg rounded-2xl">
+    <h2 class="text-2xl font-semibold mb-6 text-slate-800">
+        OpenID Connect Error Explainer
+    </h2>
+
+    <div>
+        <label for="code"
+               class="block text-sm font-medium text-slate-700 mb-1">
+            Error code
+        </label>
+
+        <input id="code"
+               type="text"
+               class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-sky-400/70
+                      placeholder-slate-400"
+               placeholder="invalid_request"
+               @bind="ManualInput"
+               @bind:event="oninput" />
+    </div>
+
+    <button class="mt-2 text-xs text-slate-500 hover:text-slate-700"
+            @onclick="Clear">
+        Clear
+    </button>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorCode))
+    {
+        @if (Explanation is not null)
+        {
+            <div class="mt-6 border border-slate-200 rounded-xl p-4 bg-slate-50/60 space-y-2">
+                <h3 class="text-xl font-medium text-rose-700">@ErrorCode</h3>
+
+                @if (!string.IsNullOrWhiteSpace(ParsedDescription))
+                {
+                    <p class="text-sm text-slate-600">
+                        <span class="font-semibold">Provider&nbsp;message:</span>
+                        @ParsedDescription
+                    </p>
+                }
+
+                <p class="text-slate-700">@Explanation.Description</p>
+                <p class="text-xs italic text-slate-500">@Explanation.DebugHint</p>
+
+                @if (!string.IsNullOrWhiteSpace(ErrorUri))
+                {
+                    <a class="inline-block pt-1 text-sky-600 hover:text-sky-800 underline underline-offset-2"
+                       href="@ErrorUri" target="_blank" rel="noopener noreferrer">
+                        More&nbsp;details&nbsp;↗
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="mt-4 text-sm text-rose-700/80">
+                Unknown error code… keep typing&nbsp;🙂
+            </p>
+        }
+    }
+</section>
+
+@code {
+    [Parameter, SupplyParameterFromQuery(Name = "error")]
+    public string? Error { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "error_description")]
+    public string? ErrorDescription { get; set; }
+
+    [Parameter, SupplyParameterFromQuery(Name = "error_uri")]
+    public string? ErrorUri { get; set; }
+
+    private string? ErrorCode { get; set; }
+    private string? ParsedDescription { get; set; }
+    private ExplanationEntry? Explanation { get; set; }
+
+    private string ManualInput
+    {
+        get => ErrorCode ?? string.Empty;
+        set
+        {
+            ErrorCode = value;
+            Lookup();
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrWhiteSpace(Error))
+            ErrorCode = Error;
+
+        ParsedDescription = !string.IsNullOrWhiteSpace(ErrorDescription)
+            ? WebUtility.UrlDecode(ErrorDescription)
+            : null;
+
+        Lookup();
+    }
+
+    private void Lookup() =>
+        Explanation = ErrorCode is not null &&
+                      Errors.TryGetValue(ErrorCode.Trim(), out var entry)
+            ? entry
+            : null;
+
+    private void Clear()
+    {
+        ErrorCode = null;
+        ParsedDescription = null;
+        Explanation = null;
+    }
+
+    private static readonly Dictionary<string, ExplanationEntry> Errors =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["invalid_request"] = new(
+                "The request is missing a required parameter, includes an invalid value, or is malformed.",
+                "Verify all parameters (especially redirect_uri) and encode them properly."
+            ),
+            ["invalid_client"] = new(
+                "Client authentication failed—unknown client, bad credentials, or unsupported auth method.",
+                "Check client_id/client_secret or PKCE values and the Authorization header."
+            ),
+            ["invalid_grant"] = new(
+                "Auth code, refresh token, or similar grant is invalid, expired, revoked, or already used.",
+                "Don’t reuse codes; confirm redirect_uri and token lifetimes."
+            ),
+            ["unauthorized_client"] = new(
+                "The client isn’t allowed to use this grant type or request these scopes.",
+                "Enable the grant type and scopes in the provider’s client settings."
+            ),
+            ["unsupported_grant_type"] = new(
+                "The authorization server doesn’t support the supplied grant_type.",
+                "Switch to a supported grant_type or enable it on the server."
+            ),
+            ["invalid_scope"] = new(
+                "Requested scope is unknown, malformed, or exceeds what the client can request.",
+                "Remove unknown scopes or request only those the client is permitted to use."
+            ),
+            ["interaction_required"] = new(
+                "User interaction is required but prompt=none prevented it.",
+                "Redirect for interactive login/consent without prompt=none."
+            ),
+            ["login_required"] = new(
+                "No valid user session and prompt=none blocks login.",
+                "Redirect for login or establish an active session first."
+            ),
+            ["consent_required"] = new(
+                "User consent is needed but couldn’t be obtained.",
+                "Redirect with a prompt that lets the user grant consent."
+            ),
+            ["account_selection_required"] = new(
+                "Multiple accounts detected; user must choose one.",
+                "Present or redirect to an account-selection UI."
+            )
+        };
+
+    private record ExplanationEntry(string Description, string DebugHint);
+}

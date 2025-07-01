@@ -1,0 +1,7 @@
+﻿services:
+  logn:
+    image: logn
+    build:
+      context: .
+      dockerfile: Logn/Dockerfile
+
