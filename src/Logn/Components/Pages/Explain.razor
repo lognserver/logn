@@ -6,7 +6,36 @@
 
 @page "/explain"
 @using System.Net
+<PageTitle>OpenID Connect Error Explainer | @Constants.AppName</PageTitle>
+<HeadContent>
+    <meta name="description"
+          content="Lookup OpenID Connect (OIDC) error codes and get plain-English troubleshooting tips to resolve authentication issues quickly." />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="@NavigationManager.Uri" />
 
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="@NavigationManager.Uri" />
+    <meta property="og:title"       content="OpenID Connect Error Explainer" />
+    <meta property="og:description" content="Decode OIDC error codes and learn how to fix them." />
+
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="OpenID Connect Error Explainer" />
+    <meta name="twitter:description" content="Decode OIDC error codes and learn how to fix them." />
+
+    <script type="application/ld+json">
+    {
+      "@@context": "https://schema.org",
+      "@@type": "TechArticle",
+      "headline": "OpenID Connect Error Explainer",
+      "description": "Interactive tool for decoding OIDC error codes and troubleshooting authentication issues.",
+      "publisher": {
+        "@@type": "Organization",
+        "name": "Codefrog"
+      },
+      "url": "@NavigationManager.Uri"
+    }
+    </script>
+</HeadContent>
 <section class="max-w-lg mx-auto mt-10 p-6 bg-white/70 backdrop-blur-md shadow-lg rounded-2xl">
     <h2 class="text-2xl font-semibold mb-6 text-slate-800">
         OpenID Connect Error Explainer
@@ -25,7 +54,8 @@
                       placeholder-slate-400"
                placeholder="invalid_request"
                @bind="ManualInput"
-               @bind:event="oninput" />
+               @bind:event="oninput"
+               aria-label="OpenID Connect error code"/>
     </div>
 
     <button class="mt-2 text-xs text-slate-500 hover:text-slate-700"
@@ -79,6 +109,8 @@
     [Parameter, SupplyParameterFromQuery(Name = "error_uri")]
     public string? ErrorUri { get; set; }
 
+    [Inject] public required NavigationManager NavigationManager { get; set; }
+    
     private string? ErrorCode { get; set; }
     private string? ParsedDescription { get; set; }
     private ExplanationEntry? Explanation { get; set; }

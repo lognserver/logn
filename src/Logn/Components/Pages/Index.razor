@@ -5,7 +5,33 @@
 *@
 
 @page "/"
+<PageTitle>@Constants.AppName – OIDC Tools</PageTitle>
+<HeadContent>
+    <meta name="description"
+          content="Free, developer-friendly tools for diagnosing OpenID Connect problems: an error code explainer and a step-by-step flow simulator." />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="@NavigationManager.Uri" />
 
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="@NavigationManager.Uri" />
+    <meta property="og:title"       content="Logn Server – OIDC Tools" />
+    <meta property="og:description" content="Quickly debug OpenID Connect with an error explainer and interactive simulator." />
+
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="Logn Server – OIDC Tools" />
+    <meta name="twitter:description" content="Quickly debug OpenID Connect with an error explainer and interactive simulator." />
+
+    <script type="application/ld+json">
+    {
+      "@@context": "https://schema.org",
+      "@@type": "WebSite",
+      "name": "Logn Server",
+      "description": "Developer suite for troubleshooting OpenID Connect.",
+      "url": "@NavigationManager.Uri",
+      "publisher": { "@@type": "Organization", "name": "Codefrog" }
+    }
+    </script>
+</HeadContent>
 <section class="max-w-2xl mx-auto mt-16 p-8 text-center space-y-8">
     <h1 class="text-3xl font-bold text-slate-800">Logn Server</h1>
     <p class="text-slate-600">
@@ -32,3 +58,7 @@
         </a>
     </div>
 </section>
+
+@code {
+    [Inject] public required NavigationManager NavigationManager { get; set; }
+}

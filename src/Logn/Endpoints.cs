@@ -26,10 +26,12 @@ public static class Endpoints
     private static readonly string[] GrantTypes = ["authorization_code", "client_credentials", "refresh_token"];
     private static readonly string KeyId = Guid.NewGuid().ToString("N");
     private static readonly byte[] KeyBytes = "A_super_secret_key_123!AND_IT_IS_LONG_ENOUGH"u8.ToArray();
+
     private static readonly SymmetricSecurityKey SecurityKey = new(KeyBytes)
     {
         KeyId = KeyId
     };
+
     private static readonly string? Algorithm = SecurityAlgorithms.HmacSha256;
     private static readonly JsonWebKey JsonWebKey = JsonWebKeyConverter.ConvertFromSymmetricSecurityKey(SecurityKey);
 
@@ -46,19 +48,56 @@ public static class Endpoints
         app.MapGet("/login", async (httpContext) =>
         {
             var page = $"""
-                        <html>
-                        <body>
-                            <form method='post' action='/login'>
-                                <label>Username: <input name='username' /></label>
-                                <br />
-                                <label>Password: <input name='password' type='password'/></label>
-                                <br />
-                                <input type='hidden' name='returnUrl' value='{httpContext.Request.Query["returnUrl"]}' />
-                                <button type='submit'>Login</button>
-                            </form>
-                        </body>
-                        </html>
-                        """;
+                         <html>
+                         
+                         <head>
+                             <title>Fake Login | Logn Server</title>
+                             <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+                         </head>
+                         
+                         <body>
+                             <section class="max-w-sm mx-auto mt-8 p-6 bg-white/70 backdrop-blur-md shadow rounded-2xl">
+                                 <h2 class="text-2xl font-semibold text-slate-800 mb-2">Sandbox Login</h2>
+                         
+                                 <p class="text-xs text-slate-500 mb-6">
+                                     This is a <span class="italic">fake</span> login page meant only for use with the
+                                     <a href="/simulator" class="text-sky-600 hover:text-sky-800 underline underline-offset-2">
+                                         OIDC Flow Simulator
+                                     </a> or for local testing.
+                                     Credentials here aren't verified against a real user store.
+                                 </p>
+                         
+                                 <form method="post" action="/login" class="space-y-4">
+                                     <div>
+                                         <label class="block text-sm font-medium text-slate-700 mb-1" for="username">
+                                             Username
+                                         </label>
+                                         <input id="username" name="username" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                                                   focus:outline-none focus:ring-2 focus:ring-sky-400/70
+                                                   placeholder-slate-400" />
+                                     </div>
+                         
+                                     <div>
+                                         <label class="block text-sm font-medium text-slate-700 mb-1" for="password">
+                                             Password
+                                         </label>
+                                         <input id="password" name="password" type="password" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                                                   focus:outline-none focus:ring-2 focus:ring-sky-400/70
+                                                   placeholder-slate-400" />
+                                     </div>
+                         
+                                     <input type="hidden" name="returnUrl" value="{httpContext.Request.Query["returnUrl"]}" />
+                         
+                                     <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg shadow
+                                                transition-colors">
+                                         Login
+                                     </button>
+                                 </form>
+                             </section>
+                         </body>
+                         
+                         </html>
+                         """;
             await httpContext.Response.WriteAsync(page, Encoding.UTF8);
         });
 
@@ -301,7 +340,7 @@ public static class Endpoints
 
             return Results.Json(response);
         });
-        
+
         app.MapGet("/connect/userinfo", (HttpContext context) =>
         {
             if (context.User?.Identity is not { IsAuthenticated: true })
@@ -328,7 +367,7 @@ public static class Endpoints
                 .Replace("/", "_")
                 .Replace("=", "");
         }
-        
+
         object GetOpenIdConfiguration()
         {
             return new

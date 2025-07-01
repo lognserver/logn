@@ -9,8 +9,64 @@
 @page "/simulator/callback"
 @using Microsoft.Extensions.Options
 
+<PageTitle>OIDC Flow Simulator | @Constants.AppName</PageTitle>
+
+<HeadContent>
+    <meta name="description"
+          content="Step through a fully interactive OpenID Connect authorization-code flow and inspect each stage for easier debugging." />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="@NavigationManager.Uri" />
+
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="@NavigationManager.Uri" />
+    <meta property="og:title"       content="OIDC Flow Simulator" />
+    <meta property="og:description" content="Interactive tool for visualizing and testing OpenID Connect flows." />
+
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="OIDC Flow Simulator" />
+    <meta name="twitter:description" content="Interactive tool for visualizing and testing OpenID Connect flows." />
+
+    <script type="application/ld+json">
+    {
+      "@@context": "https://schema.org",
+      "@@type": "SoftwareApplication",
+      "name": "OIDC Flow Simulator",
+      "description": "Interactive simulator for OpenID Connect authorization-code flows, aiding developers in debugging authentication issues.",
+      "operatingSystem": "Any",
+      "applicationCategory": "DeveloperApplication",
+      "publisher": { "@@type": "Organization", "name": "Codefrog" },
+      "url": "@NavigationManager.Uri"
+    }
+    </script>
+</HeadContent>
+
 <div class="container mx-auto px-4 py-8">
     <h3 class="text-3xl font-bold mb-6 text-gray-700">OIDC Flow Simulation</h3>
+    <!-- Authority override -->
+    <div class="max-w-md mb-6">
+        <label for="authority"
+               class="block text-sm font-medium text-gray-700 mb-1">
+            Authority&nbsp;(optional)
+        </label>
+        <input id="authority"
+               type="url"
+               class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-sky-400/70
+                      placeholder-slate-400"
+               placeholder="@Options.Value.Authority"
+               @bind="Authority"
+               @bind:event="oninput"
+               aria-label="Override authority URL" />
+        @if (string.IsNullOrWhiteSpace(Authority) ||
+             Authority == Options.Value.Authority)
+        {
+            <p class="mt-2 text-xs text-slate-500">
+                Using default sandbox – test credentials:
+                <span class="font-mono">alice / password</span>
+            </p>
+        }
+    </div>
+    <hr class="text-slate-200 mb-6" />
     <div class="mb-8 flex justify-between items-center">
         <div class="flex flex-col items-center text-center">
             <div class="flex items-center justify-center w-10 h-10 rounded-full 
@@ -115,7 +171,7 @@
                 </div>
             }
 
-            <hr class="my-6"/>
+            <hr class="my-6 text-slate-200"/>
 
             <h5 class="text-lg font-bold text-gray-700 mb-2">What happens next?</h5>
             @switch (CurrentStep)
@@ -181,9 +237,15 @@
     private string? AuthCode { get; set; }
     private string? AuthToken { get; set; }
     private string? Authority { get; set; }
+
     private string ClientId { get; set; } = "FakeClientId123";
     private OidcErrorResponse? OpenIdError { get; set; }
-
+    
+    // Use the default authority if none is provided
+    private string BaseAuthority => string.IsNullOrWhiteSpace(Authority)
+        ? Options.Value.Authority.TrimEnd('/')
+        : Authority.TrimEnd('/');
+    
     protected override Task OnInitializedAsync()
     {
         // Check if we're on the "/simulator/callback" route
@@ -209,7 +271,7 @@
         var authorizeUrl = await LognClient.GetAuthorizeUriAsync(new AuthorizationRequest
         {
             ClientId = ClientId,
-            RedirectUri = $"{Authority ?? Options.Value.Authority}/simulator/callback",
+            RedirectUri = $"{BaseAuthority}/simulator/callback",
             ResponseType = "code",
             Scope = "openid profile email",
             State = "FakeState123"
@@ -231,7 +293,7 @@
             {
                 ClientId = ClientId,
                 Code = AuthCode,
-                RedirectUri = $"{Authority ?? Options.Value.Authority}/simulator/callback",
+                RedirectUri = $"{BaseAuthority}/simulator/callback",
                 GrantType = "authorization_code"
             });
 
