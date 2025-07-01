@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -24,17 +25,20 @@ public static class Endpoints
     private static readonly string[] Algorithms = ["RS256"];
     private static readonly string[] Scopes = ["openid", "profile", "email"];
     private static readonly string[] GrantTypes = ["authorization_code", "client_credentials", "refresh_token"];
-    private static readonly string KeyId = Guid.NewGuid().ToString("N");
-    private static readonly byte[] KeyBytes = "A_super_secret_key_123!AND_IT_IS_LONG_ENOUGH"u8.ToArray();
-    private static readonly string LoginPath = "/simulator-login";
-
-    private static readonly SymmetricSecurityKey SecurityKey = new(KeyBytes)
+    
+    private static bool UseRsa => true;
+    private static readonly SecurityKey SecurityKey;
+    private static readonly string      Algorithm;
+    private static readonly JsonWebKey  Jwk;
+    
+    static Endpoints()
     {
-        KeyId = KeyId
-    };
-
-    private static readonly string? Algorithm = SecurityAlgorithms.HmacSha256;
-    private static readonly JsonWebKey JsonWebKey = JsonWebKeyConverter.ConvertFromSymmetricSecurityKey(SecurityKey);
+        (SecurityKey, Algorithm, Jwk) = UseRsa
+            ? SigningKeyFactory.UseRS256()  // RS256 (RSA)
+            : SigningKeyFactory.UseHS256("A_super_secret_key_123!AND_IT_IS_LONG_ENOUGH"u8); // HS256 (HMAC)
+    }
+    
+    private static readonly string LoginPath = "/simulator-login";
 
     public static WebApplication UseLogn(this WebApplication app, LognOptions options)
     {
@@ -113,15 +117,15 @@ public static class Endpoints
             // demo password: "password"
             if (username == "alice" && password == "password")
             {
-                var claims = new List<System.Security.Claims.Claim>
+                var claims = new List<Claim>
                 {
-                    new(System.Security.Claims.ClaimTypes.Name, username)
+                    new(ClaimTypes.Name, username)
                 };
-                var identity = new System.Security.Claims.ClaimsIdentity(
+                var identity = new ClaimsIdentity(
                     claims,
                     OpenIdConnectDefaults.AuthenticationScheme
                 );
-                var principal = new System.Security.Claims.ClaimsPrincipal(identity);
+                var principal = new ClaimsPrincipal(identity);
 
                 await httpContext.SignInAsync(
                     LognConstants.AuthenticationScheme,
@@ -134,6 +138,17 @@ public static class Endpoints
 
             // Invalid credentials
             return Results.BadRequest("Invalid username or password");
+        });
+        
+        app.MapGet("/.well-known/jwks", async context =>
+        {
+            var jwks = new
+            {
+                keys = new[] { Jwk }
+            };
+
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(jwks);
         });
 
         app.MapGet("/connect/authorize", async (HttpContext httpContext, AuthorizationRepository authRepository) =>
@@ -329,7 +344,7 @@ public static class Endpoints
 
             var idTokenString = tokenHandler.CreateToken(idTokenDescriptor);
 
-            // c) Build and return the token response
+            // Build and return the token response
             var response = new
             {
                 access_token = accessTokenString,
@@ -357,7 +372,7 @@ public static class Endpoints
             };
 
             return Results.Json(userInfo);
-        });
+        }).RequireAuthorization("UserInformation");
 
         return app;
 
@@ -383,13 +398,8 @@ public static class Endpoints
                 subject_types_supported = SubjectTypes,
                 id_token_signing_alg_values_supported = Algorithms,
                 scopes_supported = Scopes,
-                keys = new[] { JsonWebKey },
+                keys = new[] { Jwk },
             };
         }
-    }
-
-    private static JsonWebKey CreateJsonWebKey(string keyId)
-    {
-        return JsonWebKeyConverter.ConvertFromSymmetricSecurityKey(SecurityKey);
     }
 }

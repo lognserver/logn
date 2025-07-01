@@ -4,6 +4,7 @@
 
 using Logn;
 using Logn.Components;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,12 +13,32 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = LognConstants.AuthenticationScheme;
-    options.DefaultSignInScheme = LognConstants.AuthenticationScheme;
-}).AddCookie(LognConstants.AuthenticationScheme);
+    {
+        options.DefaultScheme = LognConstants.AuthenticationScheme;
+        options.DefaultSignInScheme = LognConstants.AuthenticationScheme;
+    }).AddCookie(LognConstants.AuthenticationScheme)
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, o =>
+    {
+        o.Authority = builder.Configuration["Logn:Authority"];
+        o.RequireHttpsMetadata = true;
+        o.TokenValidationParameters.ValidateIssuerSigningKey = true;
+        o.TokenValidationParameters.ValidateIssuer = true;
+        
+        // todo: support audience?
+        o.TokenValidationParameters.ValidateAudience = false;
+        o.Events = new JwtBearerEvents()
+        {
+            OnAuthenticationFailed = context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                logger.LogDebug(context.Exception, "Authentication failed");
+                return Task.CompletedTask;
+            }
+        };
+    });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationBuilder().AddPolicy("UserInformation",
+    policyBuilder => policyBuilder.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme).RequireAuthenticatedUser());
 
 builder.Services.AddHttpClient<LognClient>();
 builder.Services.AddOptions()
@@ -31,7 +52,6 @@ var app = builder.Build();
 var options = app.Services.GetRequiredService<IOptions<LognOptions>>();
 app.UseLogn(options.Value);
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -44,7 +64,8 @@ else
 
 app.UseHttpsRedirection();
 
-
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
