@@ -1,0 +1,34 @@
+@*
+  Copyright (c) 2025 Codefrog
+  Business Source License 1.1 – see LICENSE.txt for details.
+  Change Date: 2029-07-01   Change License: Apache-2.0
+*@
+
+@page "/"
+
+<section class="max-w-2xl mx-auto mt-16 p-8 text-center space-y-8">
+    <h1 class="text-3xl font-bold text-slate-800">Logn Server</h1>
+    <p class="text-slate-600">
+        Choose a tool below to debug or simulate your OpenID Connect flows.
+    </p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <a href="/explain"
+           class="block rounded-2xl border border-slate-200 bg-white/60 backdrop-blur-md p-6 shadow
+                  hover:shadow-lg transition">
+            <h2 class="text-xl font-semibold text-slate-800 mb-2">Error Explainer</h2>
+            <p class="text-sm text-slate-600">
+                Look up OIDC error codes and troubleshooting tips.
+            </p>
+        </a>
+
+        <a href="/simulator"
+           class="block rounded-2xl border border-slate-200 bg-white/60 backdrop-blur-md p-6 shadow
+                  hover:shadow-lg transition">
+            <h2 class="text-xl font-semibold text-slate-800 mb-2">OIDC Flow Simulator</h2>
+            <p class="text-sm text-slate-600">
+                Step through a simulated authorization-code flow.
+            </p>
+        </a>
+    </div>
+</section>

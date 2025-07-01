@@ -6,7 +6,38 @@
 
 @inherits LayoutComponentBase
 
+<header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm">
+    <nav class="max-w-7xl mx-auto flex items-center h-14 px-4 sm:px-6 lg:px-8">
+        <NavLink href="/" class="text-lg font-bold text-slate-800 hover:text-slate-900">
+            Logn&nbsp;Server
+        </NavLink>
+
+        <!-- Links -->
+        <div class="ml-auto flex gap-6">
+            <NavLink href="/explain" class="text-sm text-slate-600 hover:text-slate-800"
+                     activeClass="text-sky-600 font-medium">
+                Explainer
+            </NavLink>
+            <NavLink href="/simulator" class="text-sm text-slate-600 hover:text-slate-800"
+                     activeClass="text-sky-600 font-medium">
+                Simulator
+            </NavLink>
+        </div>
+    </nav>
+</header>
+
 @Body
+
+<footer class="mt-16 border-t border-slate-200 bg-white/70 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 py-6 text-center text-sm text-slate-600">
+        © 2025 Codefrog ·
+        <a href="https://github.com/lognserver/logn"
+           class="text-sky-600 hover:text-sky-800 underline underline-offset-2"
+           target="_blank" rel="noopener noreferrer">
+            GitHub&nbsp;Repository&nbsp;↗
+        </a>
+    </div>
+</footer>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
