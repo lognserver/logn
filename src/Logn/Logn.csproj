@@ -20,10 +20,4 @@
         <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.6.0" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Content Include="..\.dockerignore">
-        <Link>.dockerignore</Link>
-      </Content>
-    </ItemGroup>
-
 </Project>
