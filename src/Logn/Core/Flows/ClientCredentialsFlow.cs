@@ -26,6 +26,16 @@ public class ClientCredentialsFlow : IWorkflowDefinition
     public IReadOnlyList<IStep> Steps { get; } =
     [
         new LogStep("Hello World!"),
+        new CodeStep(ctx =>
+        {
+            var log = ctx.Services?.GetService<ILogger<ClientCredentialsFlow>>();
+            if (log is null)
+            {
+                Console.WriteLine("Hello from inline code at {0}", DateTimeOffset.UtcNow);
+                return;
+            }
+            log?.LogInformation("Hello from inline code at {Time}", DateTimeOffset.UtcNow);
+        }),
         new LogStep("It is nice to meet you!")
     ];
 }

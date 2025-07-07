@@ -33,3 +33,56 @@ public sealed class LogStep(string message) : IStep
         return ValueTask.FromResult<IOutcome>(new Success());
     }
 }
+
+/// <summary>
+/// Executes arbitrary C# code as a workflow step.
+/// Any uncaught exception is wrapped in <see cref="Failure"/>.
+/// </summary>
+public sealed class CodeStep : IStep
+{
+    private readonly Func<WorkflowContext, CancellationToken, ValueTask<IOutcome>> _body;
+
+    /// <summary>
+    /// Supply a delegate that returns an <see cref="IOutcome"/>.
+    /// </summary>
+    public CodeStep(Func<WorkflowContext, CancellationToken, ValueTask<IOutcome>> body)
+        => _body = body ?? throw new ArgumentNullException(nameof(body));
+
+    /// <summary>
+    /// Supply an action; success is assumed if it completes.
+    /// </summary>
+    public CodeStep(Action<WorkflowContext> action)
+        : this((ctx, _) =>
+        {
+            action(ctx);
+            return ValueTask.FromResult<IOutcome>(new Success());
+        })
+    {
+    }
+
+    /// <summary>
+    /// Supply an async action; success is assumed if it awaits.
+    /// </summary>
+    public CodeStep(Func<WorkflowContext, CancellationToken, Task> asyncAction)
+        : this(async (ctx, ct) =>
+        {
+            await asyncAction(ctx, ct).ConfigureAwait(false);
+            return new Success();
+        })
+    {
+    }
+
+    public async ValueTask<IOutcome> ExecuteAsync(
+        WorkflowContext ctx,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            return await _body(ctx, ct).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            return new Failure(ex);
+        }
+    }
+}

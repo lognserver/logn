@@ -39,6 +39,31 @@ public sealed class Test1
         var runner = serviceProvider.GetRequiredService<WorkflowRunner>();
         await runner.RunAsync<FooWorkflow>(waitForResult: true);
     }
+
+    [TestMethod]
+    public async Task InlineWorkflowCompletes()
+    {
+        var sp = new ServiceCollection()
+            .AddLognFlow(f => f.AddWorkflow<InlineWorkflow>("inline"))
+            .BuildServiceProvider();
+
+        await sp.GetRequiredService<WorkflowRunner>()
+            .RunAsync("inline", null, waitForResult: true);
+    }
+}
+
+file sealed class InlineWorkflow : IWorkflowDefinition
+{
+    public IReadOnlyList<IStep> Steps { get; } =
+    [
+        new CodeStep(ctx => { Console.WriteLine("Inline hello!"); }),
+        new CodeStep(async (ctx, ct) =>
+        {
+            await Task.Delay(200, ct);
+            Console.WriteLine("Async bit completed");
+            return new Success();
+        })
+    ];
 }
 
 file sealed class FooWorkflow : IWorkflowDefinition

@@ -29,12 +29,10 @@ public sealed class FlowOptionsBuilder
     public FlowOptionsBuilder AddWorkflow<T>(string name)
         where T : class, IWorkflowDefinition
     {
-        var type = typeof(T);
-        var n = type.Name;
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Workflow name must be non‑empty.", nameof(name));
 
-        Items.Add((n, sp => ActivatorUtilities.CreateInstance<T>(sp)));
+        Items.Add((name, sp => ActivatorUtilities.CreateInstance<T>(sp)));
         return this;
     }
 }
