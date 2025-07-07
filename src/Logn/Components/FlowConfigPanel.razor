@@ -1,0 +1,122 @@
+@*
+  Copyright (c) 2025 Codefrog
+  Business Source License 1.1 – see LICENSE.txt for details.
+  Change Date: 2029-07-01   Change License: Apache-2.0
+*@
+
+@using Microsoft.Extensions.Options
+<div class="max-w-md mb-6">
+    <label for="authority"
+           class="block text-sm font-medium text-gray-700 mb-1">
+        Authority (optional)
+    </label>
+    <div class="flex items-center gap-2">
+        <input id="authority"
+               type="url"
+               class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-sky-400/70
+                      placeholder-slate-400"
+               placeholder="@Options.Value.Authority"
+               @bind="Authority"
+               @bind:event="oninput"
+               aria-label="Override authority URL"/>
+        <a href="@DiscoveryDocumentUrl"
+           target="_blank"
+           class="text-xs text-sky-600 hover:underline whitespace-nowrap"
+           title="Open the OpenID discovery document for this authority">
+            Discovery Document
+        </a>
+    </div>
+
+    @if (UsingDefaultAuthority && Flow == OidcFlow.AuthorizationCode)
+    {
+        <p class="mt-2 text-xs text-slate-500">
+            Using default sandbox – test credentials:
+            <span class="font-mono">alice / password</span>
+        </p>
+    }
+    @if (UsingDefaultAuthority && Flow == OidcFlow.ClientCredentials)
+    {
+        <p class="mt-2 text-xs text-slate-500">
+            Using default sandbox – test credentials:
+            <span class="font-mono">@ClientId / @ClientSecret</span>
+        </p>
+    }
+    else
+    {
+        <p class="mt-2 text-xs text-slate-500">
+            Pointing at <strong>@Authority</strong>.
+            Make sure this URL exposes <code>/.well-known/openid-configuration</code> and
+            allows <code>@NavigationManager.BaseUri</code> as an <em>allowed redirect URI</em>.
+        </p>
+    }
+</div>
+@if (!UsingDefaultAuthority)
+{
+    <div class="max-w-md mb-6">
+        <label for="clientId" class="block text-sm font-medium text-gray-700 mb-1">
+            Client ID (required for custom authority)
+        </label>
+        <input id="clientId"
+               type="text"
+               class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                          focus:outline-none focus:ring-2 focus:ring-sky-400/70
+                          placeholder-slate-400"
+               placeholder="my-web-app"
+               @bind="ClientId"
+               @bind:event="oninput"
+               aria-label="OIDC Client ID"/>
+        <p class="mt-2 text-xs text-slate-500">
+            Use the <code>client_id</code> registered in your own OIDC server.
+            (Default demo value is <span class="font-mono">FakeClientId123</span>.)
+        </p>
+    </div>
+    @if (Flow == OidcFlow.ClientCredentials)
+    {
+        <div class="max-w-md mb-6">
+            <label for="clientId" class="block text-sm font-medium text-gray-700 mb-1">
+                Client Secret (required for custom authority)
+            </label>
+            <input id="clientSecret"
+                   type="text"
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                          focus:outline-none focus:ring-2 focus:ring-sky-400/70
+                          placeholder-slate-400"
+                   placeholder="my-secret"
+                   @bind="ClientSecret"
+                   @bind:event="oninput"
+                   aria-label="OIDC Client Secret"/>
+            <p class="mt-2 text-xs text-slate-500">
+                Use the <code>client_secret</code> registered in your own OIDC server.
+                (Default demo value is <span class="font-mono">FakeSecret123</span>.)
+            </p>
+        </div>
+    }
+}
+
+@code {
+    [Inject] public required NavigationManager NavigationManager { get; set; }
+
+    [Inject] public required IOptions<LognOptions> Options { get; set; }
+
+    [Parameter] public OidcFlow Flow { get; set; }
+
+    [Parameter] public string? Authority { get; set; }
+    [Parameter] public string ClientId { get; set; } = "FakeClientId123";
+    [Parameter] public string ClientSecret { get; set; } = "FakeSecret123";
+
+    [Parameter] public EventCallback<string?> AuthorityChanged { get; set; }
+    [Parameter] public EventCallback<string> ClientIdChanged { get; set; }
+    [Parameter] public EventCallback<string> ClientSecretChanged { get; set; }
+
+    private bool UsingDefaultAuthority =>
+        string.IsNullOrWhiteSpace(Authority) || Authority.TrimEnd('/') == Options.Value.Authority.TrimEnd('/');
+
+    private string DiscoveryDocumentUrl => $"{BaseAuthority}/.well-known/openid-configuration";
+
+    // Use the default authority if none is provided
+    private string BaseAuthority => string.IsNullOrWhiteSpace(Authority)
+        ? Options.Value.Authority.TrimEnd('/')
+        : Authority.TrimEnd('/');
+
+}

@@ -10,8 +10,8 @@ namespace Logn;
 public interface ILognClient
 {
     // ValueTask<AuthorizationResponse> AuthorizeAsync(AuthorizationRequest request);
-    ValueTask<Uri> GetAuthorizeUriAsync(AuthorizationRequest request);
-    ValueTask<TokenResponse> RequestTokenAsync(TokenRequest request);
+    ValueTask<Uri> GetAuthorizeUriAsync(string authority, AuthorizationRequest request);
+    ValueTask<TokenResponse> RequestTokenAsync(string authority, TokenRequest request);
     // Task<UserInfoResponse> UserInfoAsync(string accessToken);
     // Task<LogoutResponse> LogoutAsync(string idToken);
 }

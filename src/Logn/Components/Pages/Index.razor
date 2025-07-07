@@ -8,26 +8,28 @@
 <PageTitle>@Constants.AppName – OIDC Tools</PageTitle>
 <HeadContent>
     <meta name="description"
-          content="Free, developer-friendly tools for diagnosing OpenID Connect problems: an error code explainer and a step-by-step flow simulator." />
-    <meta name="robots" content="index,follow" />
-    <link rel="canonical" href="@NavigationManager.Uri" />
+          content="Free, developer-friendly tools for diagnosing OpenID Connect problems: an error code explainer and a step-by-step flow simulator."/>
+    <meta name="robots" content="index,follow"/>
+    <link rel="canonical" href="@NavigationManager.Uri"/>
 
-    <meta property="og:type"        content="website" />
-    <meta property="og:url"         content="@NavigationManager.Uri" />
-    <meta property="og:title"       content="Logn Server – OIDC Tools" />
-    <meta property="og:description" content="Quickly debug OpenID Connect with an error explainer and interactive simulator." />
+    <meta property="og:type" content="website"/>
+    <meta property="og:url" content="@NavigationManager.Uri"/>
+    <meta property="og:title" content="Logn Server – OIDC Tools"/>
+    <meta property="og:description"
+          content="Quickly debug OpenID Connect with an error explainer and interactive simulator."/>
 
-    <meta name="twitter:card"        content="summary_large_image" />
-    <meta name="twitter:title"       content="Logn Server – OIDC Tools" />
-    <meta name="twitter:description" content="Quickly debug OpenID Connect with an error explainer and interactive simulator." />
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="Logn Server – OIDC Tools"/>
+    <meta name="twitter:description"
+          content="Quickly debug OpenID Connect with an error explainer and interactive simulator."/>
 
     <script type="application/ld+json">
-    {
-      "@@context": "https://schema.org",
-      "@@type": "WebSite",
-      "name": "Logn Server",
-      "description": "Developer suite for troubleshooting OpenID Connect.",
-      "url": "@NavigationManager.Uri",
+        {
+          "@@context": "https://schema.org",
+          "@@type": "WebSite",
+          "name": "Logn Server",
+          "description": "Developer suite for troubleshooting OpenID Connect.",
+          "url": "@NavigationManager.Uri",
       "publisher": { "@@type": "Organization", "name": "Codefrog" }
     }
     </script>
@@ -56,6 +58,20 @@
                 Step through a simulated authorization-code flow.
             </p>
         </a>
+    </div>
+    <div class="bg-white/60 backdrop-blur-md rounded-2xl border border-slate-200 p-6 shadow text-left">
+        <h2 class="text-xl font-semibold text-slate-800 mb-2">Run locally with Docker</h2>
+        <p class="text-sm text-slate-600 mb-4">
+            Start the diagnostics site in a single command:
+        </p>
+        <pre class="whitespace-pre-wrap bg-slate-100 rounded-lg p-4 text-xs">
+docker run --rm -it -p 8080:8080 ghcr.io/lognserver/logn:main
+</pre>
+        <p class="text-xs text-slate-500">
+            Then browse to <span class="font-mono">http://localhost:8080</span>.
+            Override settings with environment variables (e.g. <span class="font-mono">LOGN__Authority</span>) if you
+            need to test against a different provider.
+        </p>
     </div>
 </section>
 

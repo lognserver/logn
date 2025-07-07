@@ -4,11 +4,20 @@
 
 namespace Logn;
 
-public record AuthorizationRequest
+public record AuthorizationRequest : ITokenForm
 {
+    public required string Authority { get; set; }
     public required string ClientId { get; set; }
     public required string RedirectUri { get; set; }
     public string ResponseType { get; set; } = "code";
     public string Scope { get; set; } = "openid";
     public string? State { get; set; }
+    public IEnumerable<KeyValuePair<string, string?>> ToForm()
+    {
+        yield return new("client_id", ClientId);
+        yield return new("redirect_uri", RedirectUri);
+        yield return new("response_type", ResponseType);
+        yield return new("scope", Scope);
+        yield return new("state", State);
+    }
 }

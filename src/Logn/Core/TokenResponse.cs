@@ -6,25 +6,25 @@ using System.Text.Json.Serialization;
 
 namespace Logn;
 
-public record TokenResponse
+public sealed record TokenResponse(
+    [property: JsonPropertyName("access_token")]
+    string AccessToken,
+    [property: JsonPropertyName("token_type")]
+    string TokenType,
+    [property: JsonPropertyName("expires_in")]
+    int ExpiresIn,
+    [property: JsonPropertyName("scope")] string Scope,
+    [property: JsonPropertyName("refresh_token")]
+    string? RefreshToken = null,
+    [property: JsonPropertyName("id_token")]
+    string? IdToken = null)
 {
-    [JsonPropertyName("access_token")]
-    public required string AccessToken { get; set; }
-    
-    [JsonPropertyName("token_type")]
-    public required string TokenType { get; set; }
-    
-    [JsonPropertyName("expires_in")]
-    public required int ExpiresIn { get; set; }
-    
-    [JsonPropertyName("refresh_token")]
-    public string? RefreshToken { get; set; }
-    
-    [JsonPropertyName("id_token")]
-    public string? IdToken { get; set; }
-    
-    [JsonPropertyName("scope")]
-    public required string Scope { get; set; }
+    /// <summary>UTC instant when the token expires.</summary>
+    public DateTimeOffset ExpiresAt => DateTimeOffset.UtcNow.AddSeconds(ExpiresIn);
+
+    /// <summary>True if <see cref="ExpiresAt"/> is in the past (grace ±30 s).</summary>
+    public bool IsExpired(TimeSpan? grace = null) =>
+        DateTimeOffset.UtcNow >= ExpiresAt - (grace ?? TimeSpan.FromSeconds(30));
 }
 
 public class OidcException(OidcErrorResponse error) : Exception
@@ -34,12 +34,10 @@ public class OidcException(OidcErrorResponse error) : Exception
 
 public record OidcErrorResponse
 {
-    [JsonPropertyName("error")]
-    public required string Error { get; set; }
-    
+    [JsonPropertyName("error")] public required string Error { get; set; }
+
     [JsonPropertyName("error_description")]
     public string? ErrorDescription { get; set; }
-    
-    [JsonPropertyName("error_uri")]
-    public string? ErrorUri { get; set; }
+
+    [JsonPropertyName("error_uri")] public string? ErrorUri { get; set; }
 }

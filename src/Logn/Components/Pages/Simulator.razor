@@ -13,60 +13,100 @@
 
 <HeadContent>
     <meta name="description"
-          content="Step through a fully interactive OpenID Connect authorization-code flow and inspect each stage for easier debugging." />
-    <meta name="robots" content="index,follow" />
-    <link rel="canonical" href="@NavigationManager.Uri" />
+          content="Step through a fully interactive OpenID Connect authorization-code flow and inspect each stage for easier debugging."/>
+    <meta name="robots" content="index,follow"/>
+    <link rel="canonical" href="@NavigationManager.Uri"/>
 
-    <meta property="og:type"        content="website" />
-    <meta property="og:url"         content="@NavigationManager.Uri" />
-    <meta property="og:title"       content="OIDC Flow Simulator" />
-    <meta property="og:description" content="Interactive tool for visualizing and testing OpenID Connect flows." />
+    <meta property="og:type" content="website"/>
+    <meta property="og:url" content="@NavigationManager.Uri"/>
+    <meta property="og:title" content="OIDC Flow Simulator"/>
+    <meta property="og:description" content="Interactive tool for visualizing and testing OpenID Connect flows."/>
 
-    <meta name="twitter:card"        content="summary_large_image" />
-    <meta name="twitter:title"       content="OIDC Flow Simulator" />
-    <meta name="twitter:description" content="Interactive tool for visualizing and testing OpenID Connect flows." />
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="OIDC Flow Simulator"/>
+    <meta name="twitter:description" content="Interactive tool for visualizing and testing OpenID Connect flows."/>
 
     <script type="application/ld+json">
-    {
-      "@@context": "https://schema.org",
-      "@@type": "SoftwareApplication",
-      "name": "OIDC Flow Simulator",
-      "description": "Interactive simulator for OpenID Connect authorization-code flows, aiding developers in debugging authentication issues.",
-      "operatingSystem": "Any",
-      "applicationCategory": "DeveloperApplication",
-      "publisher": { "@@type": "Organization", "name": "Codefrog" },
-      "url": "@NavigationManager.Uri"
+        {
+          "@@context": "https://schema.org",
+          "@@type": "SoftwareApplication",
+          "name": "OIDC Flow Simulator",
+          "description": "Interactive simulator for OpenID Connect authorization-code flows, aiding developers in debugging authentication issues.",
+          "operatingSystem": "Any",
+          "applicationCategory": "DeveloperApplication",
+          "publisher": { "@@type": "Organization", "name": "Codefrog" },
+          "url": "@NavigationManager.Uri"
     }
     </script>
 </HeadContent>
 
 <div class="container mx-auto px-4 py-8">
     <h3 class="text-3xl font-bold mb-6 text-gray-700">OIDC Flow Simulation</h3>
-    <!-- Authority override -->
+    <p class="text-gray-600 mb-6">
+        This tool simulates an OpenID Connect authorization-code flow, allowing you to step through each stage
+        and inspect the results. You can use the default sandbox authority or provide your own.
+    </p>
     <div class="max-w-md mb-6">
         <label for="authority"
                class="block text-sm font-medium text-gray-700 mb-1">
             Authority&nbsp;(optional)
         </label>
-        <input id="authority"
-               type="url"
-               class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+        <div class="flex items-center gap-2">
+            <input id="authority"
+                   type="url"
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
                       focus:outline-none focus:ring-2 focus:ring-sky-400/70
                       placeholder-slate-400"
-               placeholder="@Options.Value.Authority"
-               @bind="Authority"
-               @bind:event="oninput"
-               aria-label="Override authority URL" />
-        @if (string.IsNullOrWhiteSpace(Authority) ||
-             Authority == Options.Value.Authority)
+                   placeholder="@Options.Value.Authority"
+                   @bind="Authority"
+                   @bind:event="oninput"
+                   aria-label="Override authority URL"/>
+            <a href="@DiscoveryDocumentUrl"
+               target="_blank"
+               class="text-xs text-sky-600 hover:underline whitespace-nowrap"
+               title="Open the OpenID discovery document for this authority">
+                Discovery Document
+            </a>
+        </div>
+
+        @if (UsingDefaultAuthority)
         {
             <p class="mt-2 text-xs text-slate-500">
                 Using default sandbox – test credentials:
                 <span class="font-mono">alice / password</span>
             </p>
         }
+        else
+        {
+            <p class="mt-2 text-xs text-slate-500">
+                Pointing at <strong>@Authority</strong>.
+                Make sure this URL exposes <code>/.well-known/openid-configuration</code> and
+                allows <code>@NavigationManager.BaseUri</code> as an <em>allowed redirect URI</em>.
+            </p>
+        }
     </div>
-    <hr class="text-slate-200 mb-6" />
+    @if (!UsingDefaultAuthority)
+    {
+        <div class="max-w-md mb-6">
+            <label for="clientId" class="block text-sm font-medium text-gray-700 mb-1">
+                Client ID (required for custom authority)
+            </label>
+            <input id="clientId"
+                   type="text"
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                          focus:outline-none focus:ring-2 focus:ring-sky-400/70
+                          placeholder-slate-400"
+                   placeholder="my-web-app"
+                   @bind="ClientId"
+                   @bind:event="oninput"
+                   aria-label="OIDC Client ID"/>
+            <p class="mt-2 text-xs text-slate-500">
+                Use the <code>client_id</code> registered in your own OIDC server.
+                (Default demo value is <span class="font-mono">FakeClientId123</span>.)
+            </p>
+        </div>
+    }
+    <hr class="text-slate-200 mb-6"/>
     <div class="mb-8 flex justify-between items-center">
         <div class="flex flex-col items-center text-center">
             <div class="flex items-center justify-center w-10 h-10 rounded-full 
@@ -208,7 +248,8 @@
                 else
                 {
                     <p class="mt-2">
-                        <a href="@($"/explain?error={OpenIdError.Error}")" target="_blank" class="text-blue-600 hover:underline">
+                        <a href="@($"/explain?error={OpenIdError.Error}")" target="_blank"
+                           class="text-blue-600 hover:underline">
                             Explain this error
                         </a>
                     </p>
@@ -240,12 +281,17 @@
 
     private string ClientId { get; set; } = "FakeClientId123";
     private OidcErrorResponse? OpenIdError { get; set; }
-    
+
+    private string DiscoveryDocumentUrl => $"{BaseAuthority}/.well-known/openid-configuration";
+
+    private bool UsingDefaultAuthority =>
+        string.IsNullOrWhiteSpace(Authority) || Authority.TrimEnd('/') == Options.Value.Authority.TrimEnd('/');
+
     // Use the default authority if none is provided
     private string BaseAuthority => string.IsNullOrWhiteSpace(Authority)
         ? Options.Value.Authority.TrimEnd('/')
         : Authority.TrimEnd('/');
-    
+
     protected override Task OnInitializedAsync()
     {
         // Check if we're on the "/simulator/callback" route
@@ -268,10 +314,21 @@
 
     private async Task HandleLogin()
     {
+        if (!UsingDefaultAuthority && string.IsNullOrWhiteSpace(ClientId))
+        {
+            OpenIdError = new()
+            {
+                Error = "invalid_request",
+                ErrorDescription = "Client ID is required when overriding the authority."
+            };
+            return;
+        }
+
         var authorizeUrl = await LognClient.GetAuthorizeUriAsync(new AuthorizationRequest
         {
+            Authority = BaseAuthority,
             ClientId = ClientId,
-            RedirectUri = $"{BaseAuthority}/simulator/callback",
+            RedirectUri = $"{NavigationManager.BaseUri.TrimEnd('/')}/simulator/callback",
             ResponseType = "code",
             Scope = "openid profile email",
             State = "FakeState123"
@@ -289,13 +346,8 @@
 
         try
         {
-            var tokenResponse = await LognClient.RequestTokenAsync(new TokenRequest
-            {
-                ClientId = ClientId,
-                Code = AuthCode,
-                RedirectUri = $"{BaseAuthority}/simulator/callback",
-                GrantType = "authorization_code"
-            });
+            var tokenRequest = new AuthCodeTokenRequest(ClientId, AuthCode, $"{BaseAuthority}/simulator/callback");
+            var tokenResponse = await LognClient.RequestTokenAsync(BaseAuthority, tokenRequest);
 
             AuthToken = tokenResponse.AccessToken;
             CurrentStep = OidcStep.TokenReceived;

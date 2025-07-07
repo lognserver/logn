@@ -3,22 +3,28 @@
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
+        <WarningsAsErrors>nullable</WarningsAsErrors>
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>aspnet-Logn-85140b51-5aa5-42b7-bc74-97f279774a62</UserSecretsId>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
-        <None Update="Data\app.db" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true"/>
+        <None Update="Data\app.db" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.6" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.6" />
-        <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.2"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.2"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.2"/>
+        <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.2" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.2" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.2" />
         <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.6.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Logn.Flow.Basic\Logn.Flow.Basic.csproj" />
+      <ProjectReference Include="..\Logn.Flow\Logn.Flow.csproj" />
     </ItemGroup>
 
 </Project>

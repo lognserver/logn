@@ -5,6 +5,8 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Logn.Core.Flows;
+using Logn.Flow.Engine;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -151,7 +153,7 @@ public static class Endpoints
             await context.Response.WriteAsJsonAsync(jwks);
         });
 
-        app.MapGet("/connect/authorize", async (HttpContext httpContext, AuthorizationRepository authRepository) =>
+        app.MapGet("/connect/authorize", async (HttpContext httpContext, AuthorizationRepository authRepository, WorkflowRunner workflowRunner) =>
         {
             var clientId = httpContext.Request.Query["client_id"];
             var redirectUri = httpContext.Request.Query["redirect_uri"];
@@ -191,11 +193,13 @@ public static class Endpoints
             // generate an authorization code (this is not secure, demo only)
             var code = Guid.NewGuid().ToString("n");
 
+            ArgumentException.ThrowIfNullOrWhiteSpace(clientId);
+            ArgumentException.ThrowIfNullOrWhiteSpace(redirectUri);
             // store code details in memory
             authRepository.authCodes[code] = new AuthCodeInfo(
                 UserId: httpContext.User.Identity?.Name ?? "unknown",
-                ClientId: clientId,
-                RedirectUri: redirectUri,
+                ClientId: clientId!,
+                RedirectUri: redirectUri!,
                 CodeChallenge: codeChallenge ?? "",
                 CodeChallengeMethod: codeChallengeMethod ?? "",
                 CreatedAt: DateTime.UtcNow,
@@ -203,7 +207,7 @@ public static class Endpoints
             );
 
             // build the redirect URI: redirect_uri?code=xxx&state=xxx
-            var uriBuilder = new UriBuilder(redirectUri)
+            var uriBuilder = new UriBuilder(redirectUri!)
             {
                 Query = $"code={code}" + (string.IsNullOrEmpty(state) ? "" : $"&state={state}")
             };
@@ -212,8 +216,14 @@ public static class Endpoints
             return Results.Redirect(uriBuilder.Uri.ToString());
         });
 
-        app.MapPost("/connect/token", async (HttpContext httpContext, AuthorizationRepository authRepository) =>
+        app.MapPost("/connect/token", async (
+            HttpContext httpContext, 
+            AuthorizationRepository authRepository, 
+            WorkflowRunner workflowRunner) =>
         {
+          await workflowRunner.RunAsync<RequestTokenFlow>();
+            // Console.WriteLine(res);
+            
             var form = httpContext.Request.Form;
             string? grantType = form["grant_type"];
             string? code = form["code"];

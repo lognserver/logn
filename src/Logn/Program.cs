@@ -4,6 +4,8 @@
 
 using Logn;
 using Logn.Components;
+using Logn.Core.Flows;
+using Logn.Flow;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 
@@ -46,6 +48,11 @@ builder.Services.AddOptions()
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddSingleton<AuthorizationRepository>();
+builder.Services.AddSingleton<ClientRepository>();
+builder.Services.AddLognFlow(o =>
+{
+    o.AddWorkflow<RequestTokenFlow>(nameof(RequestTokenFlow));
+});
 
 var app = builder.Build();
 
