@@ -33,6 +33,3 @@ public sealed class LogStep(string message) : IStep
         return ValueTask.FromResult<IOutcome>(new Success());
     }
 }
-
-public sealed class SubWorkflowStep<T>(bool waitForResult = true) : SubWorkflowStep(typeof(T).Name, waitForResult)
-    where T : IWorkflowDefinition;

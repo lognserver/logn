@@ -36,3 +36,6 @@ public class SubWorkflowStep(string workflowName, bool waitForResult = true) : I
         }
     }
 }
+
+public sealed class SubWorkflowStep<T>(bool waitForResult = true) : SubWorkflowStep(typeof(T).Name, waitForResult)
+    where T : IWorkflowDefinition;

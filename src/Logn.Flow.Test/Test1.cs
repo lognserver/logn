@@ -32,8 +32,8 @@ public sealed class Test1
         var services = new ServiceCollection()
             .AddLognFlow(flow =>
             {
-                flow.AddWorkflow<FooWorkflow>("foo")
-                    .AddWorkflow<BarWorkflow>("bar");
+                flow.AddWorkflow<FooWorkflow>()
+                    .AddWorkflow<BarWorkflow>();
             });
         var serviceProvider = services.BuildServiceProvider();
         var runner = serviceProvider.GetRequiredService<WorkflowRunner>();
