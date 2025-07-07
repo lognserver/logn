@@ -17,6 +17,7 @@ public sealed class WorkflowRunner(
     public async ValueTask RunAsync<T>(
         string? instanceId = null,
         bool waitForResult = false,
+        Action<WorkflowContext>? init = null,
         CancellationToken ct = default)
         where T : IWorkflowDefinition
     {
@@ -28,7 +29,7 @@ public sealed class WorkflowRunner(
             throw new KeyNotFoundException($"Workflow '{name}' not found.");
         }
 
-        await RunAsync(def, instanceId, waitForResult, ct);
+        await RunAsync(def, instanceId, waitForResult, init, ct);
     }
 
     /// <summary>
@@ -39,6 +40,7 @@ public sealed class WorkflowRunner(
         string workflowName,
         string? instanceId,
         bool waitForResult = false,
+        Action<WorkflowContext>? init = null,
         CancellationToken ct = default)
     {
         var def = registry.Get(workflowName);
@@ -47,13 +49,14 @@ public sealed class WorkflowRunner(
             throw new KeyNotFoundException($"Workflow '{workflowName}' not found.");
         }
 
-        await RunAsync(def, instanceId, waitForResult, ct);
+        await RunAsync(def, instanceId, waitForResult, init, ct);
     }
 
     private async ValueTask RunAsync(
         IWorkflowDefinition def,
         string? instanceId = null,
         bool waitForResult = false,
+        Action<WorkflowContext>? init = null,
         CancellationToken ct = default)
     {
         var id = instanceId ?? Ulid.NewUlid().ToString();
@@ -61,6 +64,10 @@ public sealed class WorkflowRunner(
         {
             Services = services
         };
+        
+        // initialize context with user-supplied action
+        init?.Invoke(ctx);
+        
         var state = await store.LoadAsync(id, ct);
 
         var startIndex = state?.StepIndex ?? 0;

@@ -6,8 +6,20 @@ namespace Logn.Flow;
 
 public sealed class WorkflowContext
 {
+    /// <summary>
+    /// The unique identifier of the workflow instance.
+    /// </summary>
+    /// <remarks>This is a string over a GUID to allow flexibility. By default, we will use ULID strings.</remarks>
     public string WorkflowId { get; }
+
+    /// <summary>
+    /// Ensures that workflow steps can resolve dependencies.
+    /// </summary>
     public IServiceProvider? Services { get; init; }
+    
+    /// <summary>
+    /// Information about the current state of the workflow.
+    /// </summary>
     public IDictionary<string, object?> Items { get; } = new Dictionary<string, object?>(StringComparer.Ordinal);
     public WorkflowContext(string id) => WorkflowId = id;
 }

@@ -54,6 +54,7 @@ public sealed class Test1
 
 file sealed class InlineWorkflow : IWorkflowDefinition
 {
+    public string Name { get; } = "inline";
     public IReadOnlyList<IStep> Steps { get; } =
     [
         new CodeStep(ctx => { Console.WriteLine("Inline hello!"); }),
@@ -68,6 +69,7 @@ file sealed class InlineWorkflow : IWorkflowDefinition
 
 file sealed class FooWorkflow : IWorkflowDefinition
 {
+    public string Name { get; } = "foo";
     public IReadOnlyList<IStep> Steps { get; } =
     [
         new PrintStep("Foo"),
@@ -78,6 +80,7 @@ file sealed class FooWorkflow : IWorkflowDefinition
 
 file sealed class BarWorkflow : IWorkflowDefinition
 {
+    public string Name { get; } = "bar";
     public IReadOnlyList<IStep> Steps { get; } =
     [
         new PrintStep("Bar"),
@@ -86,6 +89,7 @@ file sealed class BarWorkflow : IWorkflowDefinition
 
 file sealed class HelloWorkflow : IWorkflowDefinition
 {
+    public string Name { get; } = "hello";
     public IReadOnlyList<IStep> Steps { get; } =
     [
         new PrintStep("A"),
