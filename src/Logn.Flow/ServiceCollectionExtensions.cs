@@ -31,7 +31,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<WorkflowContext>(sp =>
         {
             var id = Ulid.NewUlid().ToString();
-            return new WorkflowContext(id) { Services = sp };
+            return new WorkflowContext(id, sp);
         });
 
         // caller add their workflows

@@ -48,10 +48,12 @@ builder.Services.AddOptions()
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddSingleton<AuthorizationRepository>();
-builder.Services.AddSingleton<ClientRepository>();
+builder.Services.AddSingleton<ClientStore>();
+builder.Services.AddSingleton<AccessTokenBuilder>();
 builder.Services.AddLognFlow(o =>
 {
     o.AddWorkflow<RequestTokenFlow>(nameof(RequestTokenFlow));
+    o.AddWorkflow<ClientCredentialsFlow>(nameof(ClientCredentialsFlow));
 });
 
 var app = builder.Build();

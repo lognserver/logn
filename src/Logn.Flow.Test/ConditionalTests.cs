@@ -24,17 +24,6 @@ public class ConditionalTests
     }
 }
 
-file sealed class ConditionalStep(
-    Func<WorkflowContext, bool> test,
-    string ifTrue,
-    string ifFalse) : IStep
-{
-    public ValueTask<IOutcome> ExecuteAsync(
-        WorkflowContext ctx,
-        CancellationToken _)
-        => ValueTask.FromResult<IOutcome>(
-            test(ctx) ? new Jump(ifTrue) : new Jump(ifFalse));
-}
 
 public sealed class PaymentWorkflow : IWorkflowDefinition
 {

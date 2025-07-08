@@ -14,17 +14,29 @@ public class AuthorizationRepository
 
 public record ClientInfo(string ClientId, string ClientSecret, string[] AllowedScopes);
 
-public sealed class ClientRepository
+public sealed class ClientStore
 {
     // client_id => ClientInfo
     internal readonly ConcurrentDictionary<string, ClientInfo> clients = new();
 
-    public ClientRepository()
+    public ClientStore()
     {
         clients["demo-api"] = new ClientInfo(
             ClientId: "demo-api",
             ClientSecret: "demo-secret",
             AllowedScopes: ["api.read", "api.write"]
+        );
+
+        clients["demo-web"] = new ClientInfo(
+            ClientId: "demo-web",
+            ClientSecret: "web-secret",
+            AllowedScopes: ["web.read", "web.write"]
+        );
+
+        clients["FakeClientId123"] = new ClientInfo(
+            ClientId: "FakeClientId123",
+            ClientSecret: "FakeSecret123",
+            AllowedScopes: []
         );
     }
 

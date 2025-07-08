@@ -9,7 +9,7 @@ public sealed class WorkflowRunner(
     IPersistenceStore store,
     IScheduler scheduler,
     IEventBus bus,
-    IServiceProvider? services = null)
+    IServiceProvider services)
 {
     private readonly StepDispatcher _dispatcher = new(store, scheduler, bus);
 
@@ -32,11 +32,44 @@ public sealed class WorkflowRunner(
         await RunAsync(def, instanceId, waitForResult, init, ct);
     }
 
+    public async ValueTask<TResult?> RunAsync<TFlow, TInput, TResult>(
+        TInput input,
+        string? instanceId = null,
+        CancellationToken ct = default)
+        where TFlow : IWorkflowDefinition
+    {
+        // Re‑use the existing internal pipeline; always wait for completion.
+        object? boxed = await RunAsync(
+            workflowName: typeof(TFlow).Name,
+            instanceId: instanceId,
+            waitForResult: true,
+            init: ctx => ctx.Input = input,
+            ct: ct);
+
+        return (TResult?)boxed;
+    }
+
+    public ValueTask<object?> RunAsync<TFlow, TInput>(
+        TInput input,
+        string? instanceId = null,
+        bool wait = false,
+        Action<WorkflowContext>? initCtx = null,
+        CancellationToken ct = default)
+        where TFlow : IWorkflowDefinition
+    {
+        return RunAsync(typeof(TFlow).Name, instanceId, wait,
+            ctx =>
+            {
+                ctx.Input = input;
+                initCtx?.Invoke(ctx);
+            }, ct);
+    }
+
     /// <summary>
     /// Creates or resumes a workflow instance.
     /// Prefer using the generic overload with a type parameter.
     /// </summary>
-    public async ValueTask RunAsync(
+    public async ValueTask<object?> RunAsync(
         string workflowName,
         string? instanceId,
         bool waitForResult = false,
@@ -49,10 +82,10 @@ public sealed class WorkflowRunner(
             throw new KeyNotFoundException($"Workflow '{workflowName}' not found.");
         }
 
-        await RunAsync(def, instanceId, waitForResult, init, ct);
+        return await RunAsync(def, instanceId, waitForResult, init, ct);
     }
 
-    private async ValueTask RunAsync(
+    private async ValueTask<object?> RunAsync(
         IWorkflowDefinition def,
         string? instanceId = null,
         bool waitForResult = false,
@@ -60,25 +93,22 @@ public sealed class WorkflowRunner(
         CancellationToken ct = default)
     {
         var id = instanceId ?? Ulid.NewUlid().ToString();
-        var ctx = new WorkflowContext(id)
-        {
-            Services = services
-        };
-        
+        var ctx = new WorkflowContext(id, services);
+
         // initialize context with user-supplied action
         init?.Invoke(ctx);
-        
+
         var state = await store.LoadAsync(id, ct);
 
         var startIndex = state?.StepIndex ?? 0;
 
-        Task? waiter = null;
+        Task<object?>? waiter = null;
 
         if (waitForResult)
         {
             var tcs = new TaskCompletionSource<object?>(
                 TaskCreationOptions.RunContinuationsAsynchronously);
-            
+
             // hand off to dispatcher
             ctx.Items["__completion__"] = tcs;
             waiter = tcs.Task;
@@ -88,7 +118,9 @@ public sealed class WorkflowRunner(
 
         if (waiter is not null)
         {
-            await waiter;
+            return await waiter;
         }
+
+        return null;
     }
 }

@@ -53,6 +53,7 @@ internal sealed class StepDispatcher(IPersistenceStore store, IScheduler schedul
                     ct);
                 break;
 
+            // experimental, probably remove this in the next couple of commits
             case Jump j:
                 var target = GetIndex(def, j.NextStepName);
                 await PersistAndContinueAsync(def, ctx, target, ct);
@@ -77,7 +78,7 @@ internal sealed class StepDispatcher(IPersistenceStore store, IScheduler schedul
     {
         if (ctx.Items.TryGetValue("__completion__", out var o)
             && o is TaskCompletionSource<object?> tcs)
-            tcs.TrySetResult(null);
+            tcs.TrySetResult(ctx.Output);
     }
 
     private static void TryFail(WorkflowContext ctx, Exception ex)
@@ -112,13 +113,13 @@ internal sealed class StepDispatcher(IPersistenceStore store, IScheduler schedul
     }
 }
 
-public sealed record Jump(string NextStepName) : IOutcome;
+internal sealed record Jump(string NextStepName) : IOutcome;
 
 /// <summary>
 /// Wraps any <see cref="IStep"/> with a name that can be the target of a
 /// <see cref="Jump"/> outcome.
 /// </summary>
-public sealed class NamedStep : IStep
+internal sealed class NamedStep : IStep
 {
     public string Name { get; }
     private IStep Inner { get; }
@@ -135,7 +136,7 @@ public sealed class NamedStep : IStep
         => Inner.ExecuteAsync(ctx, ct);
 }
 
-public static class Step
+internal static class Step
 {
     public static NamedStep Label(string name, IStep inner) => new(name, inner);
 }

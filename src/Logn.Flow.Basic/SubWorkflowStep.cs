@@ -12,7 +12,7 @@ namespace Logn.Flow.Basic;
 /// If the inner workflow finishes successfully the step returns <see cref="Success"/>.
 /// If the inner workflow throws, the exception is wrapped in <see cref="Failure"/>.
 /// </summary>
-public class SubWorkflowStep(string workflowName, bool waitForResult = true) : IStep
+public class SubWorkflowStep(string workflowName, Func<WorkflowContext, object?>? inputSelector = null, bool waitForResult = true) : IStep
 {
     private readonly string _workflowName = workflowName ?? throw new ArgumentNullException(nameof(workflowName));
 
@@ -27,7 +27,14 @@ public class SubWorkflowStep(string workflowName, bool waitForResult = true) : I
 
         try
         {
-            await runner.RunAsync(_workflowName, null, waitForResult: waitForResult, ct: ct);
+            await runner.RunAsync(_workflowName, null, waitForResult: waitForResult, init: c =>
+            {
+                // pass the same service provider to the sub-workflow
+                c.Services = sp;
+                
+                // pass the input to the sub-workflow or use the selector if provided
+                c.Input = inputSelector?.Invoke(ctx) ?? ctx.Input;
+            }, ct);
             return new Success();
         }
         catch (Exception ex)
@@ -37,5 +44,5 @@ public class SubWorkflowStep(string workflowName, bool waitForResult = true) : I
     }
 }
 
-public sealed class SubWorkflowStep<T>(bool waitForResult = true) : SubWorkflowStep(typeof(T).Name, waitForResult)
+public sealed class SubWorkflowStep<T>(bool waitForResult = true) : SubWorkflowStep(typeof(T).Name, waitForResult: waitForResult)
     where T : IWorkflowDefinition;

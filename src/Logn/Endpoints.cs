@@ -27,19 +27,19 @@ public static class Endpoints
     private static readonly string[] Algorithms = ["RS256"];
     private static readonly string[] Scopes = ["openid", "profile", "email"];
     private static readonly string[] GrantTypes = ["authorization_code", "client_credentials", "refresh_token"];
-    
+
     private static bool UseRsa => true;
     private static readonly SecurityKey SecurityKey;
-    private static readonly string      Algorithm;
-    private static readonly JsonWebKey  Jwk;
-    
+    private static readonly string Algorithm;
+    private static readonly JsonWebKey Jwk;
+
     static Endpoints()
     {
         (SecurityKey, Algorithm, Jwk) = UseRsa
-            ? SigningKeyFactory.UseRS256()  // RS256 (RSA)
+            ? SigningKeyFactory.UseRS256() // RS256 (RSA)
             : SigningKeyFactory.UseHS256("A_super_secret_key_123!AND_IT_IS_LONG_ENOUGH"u8); // HS256 (HMAC)
     }
-    
+
     private static readonly string LoginPath = "/simulator-login";
 
     public static WebApplication UseLogn(this WebApplication app, LognOptions options)
@@ -55,56 +55,56 @@ public static class Endpoints
         app.MapGet("/simulator-login", async (httpContext) =>
         {
             var page = $"""
-                         <html>
-                         
-                         <head>
-                             <title>Fake Login | Logn Server</title>
-                             <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
-                         </head>
-                         
-                         <body>
-                             <section class="max-w-sm mx-auto mt-8 p-6 bg-white/70 backdrop-blur-md shadow rounded-2xl">
-                                 <h2 class="text-2xl font-semibold text-slate-800 mb-2">Sandbox Login</h2>
-                         
-                                 <p class="text-xs text-slate-500 mb-6">
-                                     This is a <span class="italic">fake</span> login page meant only for use with the
-                                     <a href="/simulator" class="text-sky-600 hover:text-sky-800 underline underline-offset-2">
-                                         OIDC Flow Simulator
-                                     </a> or for local testing.
-                                     Credentials here aren't verified against a real user store.
-                                 </p>
-                         
-                                 <form method="post" action="/simulator-login" class="space-y-4">
-                                     <div>
-                                         <label class="block text-sm font-medium text-slate-700 mb-1" for="username">
-                                             Username
-                                         </label>
-                                         <input id="username" name="username" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
-                                                   focus:outline-none focus:ring-2 focus:ring-sky-400/70
-                                                   placeholder-slate-400" />
-                                     </div>
-                         
-                                     <div>
-                                         <label class="block text-sm font-medium text-slate-700 mb-1" for="password">
-                                             Password
-                                         </label>
-                                         <input id="password" name="password" type="password" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
-                                                   focus:outline-none focus:ring-2 focus:ring-sky-400/70
-                                                   placeholder-slate-400" />
-                                     </div>
-                         
-                                     <input type="hidden" name="returnUrl" value="{httpContext.Request.Query["returnUrl"]}" />
-                         
-                                     <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg shadow
-                                                transition-colors">
-                                         Login
-                                     </button>
-                                 </form>
-                             </section>
-                         </body>
-                         
-                         </html>
-                         """;
+                        <html>
+
+                        <head>
+                            <title>Fake Login | Logn Server</title>
+                            <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+                        </head>
+
+                        <body>
+                            <section class="max-w-sm mx-auto mt-8 p-6 bg-white/70 backdrop-blur-md shadow rounded-2xl">
+                                <h2 class="text-2xl font-semibold text-slate-800 mb-2">Sandbox Login</h2>
+
+                                <p class="text-xs text-slate-500 mb-6">
+                                    This is a <span class="italic">fake</span> login page meant only for use with the
+                                    <a href="/simulator" class="text-sky-600 hover:text-sky-800 underline underline-offset-2">
+                                        OIDC Flow Simulator
+                                    </a> or for local testing.
+                                    Credentials here aren't verified against a real user store.
+                                </p>
+
+                                <form method="post" action="/simulator-login" class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1" for="username">
+                                            Username
+                                        </label>
+                                        <input id="username" name="username" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                                                  focus:outline-none focus:ring-2 focus:ring-sky-400/70
+                                                  placeholder-slate-400" />
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1" for="password">
+                                            Password
+                                        </label>
+                                        <input id="password" name="password" type="password" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                                                  focus:outline-none focus:ring-2 focus:ring-sky-400/70
+                                                  placeholder-slate-400" />
+                                    </div>
+
+                                    <input type="hidden" name="returnUrl" value="{httpContext.Request.Query["returnUrl"]}" />
+
+                                    <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg shadow
+                                               transition-colors">
+                                        Login
+                                    </button>
+                                </form>
+                            </section>
+                        </body>
+
+                        </html>
+                        """;
             await httpContext.Response.WriteAsync(page, Encoding.UTF8);
         });
 
@@ -141,7 +141,7 @@ public static class Endpoints
             // Invalid credentials
             return Results.BadRequest("Invalid username or password");
         });
-        
+
         app.MapGet("/.well-known/jwks", async context =>
         {
             var jwks = new
@@ -153,78 +153,110 @@ public static class Endpoints
             await context.Response.WriteAsJsonAsync(jwks);
         });
 
-        app.MapGet("/connect/authorize", async (HttpContext httpContext, AuthorizationRepository authRepository, WorkflowRunner workflowRunner) =>
-        {
-            var clientId = httpContext.Request.Query["client_id"];
-            var redirectUri = httpContext.Request.Query["redirect_uri"];
-            var responseType = httpContext.Request.Query["response_type"];
-            var scope = httpContext.Request.Query["scope"];
-            var state = httpContext.Request.Query["state"];
-
-            // TODO: PKCE parameters
-            string? codeChallenge = httpContext.Request.Query["code_challenge"];
-            string? codeChallengeMethod = httpContext.Request.Query["code_challenge_method"];
-            var nonce = httpContext.Request.Query["nonce"];
-
-            // simple validation only
-            if (string.IsNullOrWhiteSpace(clientId) ||
-                string.IsNullOrWhiteSpace(redirectUri) ||
-                string.IsNullOrWhiteSpace(responseType))
+        app.MapGet("/connect/authorize",
+            async (HttpContext httpContext, AuthorizationRepository authRepository, WorkflowRunner workflowRunner) =>
             {
-                // todo: return valid openid error response
-                return Results.BadRequest("Missing required parameters.");
-            }
+                var clientId = httpContext.Request.Query["client_id"];
+                var redirectUri = httpContext.Request.Query["redirect_uri"];
+                var responseType = httpContext.Request.Query["response_type"];
+                var scope = httpContext.Request.Query["scope"];
+                var state = httpContext.Request.Query["state"];
 
-            // odd we need these to prevent compiler warning, with the above validation?
-            ArgumentException.ThrowIfNullOrWhiteSpace(clientId);
-            ArgumentException.ThrowIfNullOrWhiteSpace(redirectUri);
-            ArgumentException.ThrowIfNullOrWhiteSpace(responseType);
+                // TODO: PKCE parameters
+                string? codeChallenge = httpContext.Request.Query["code_challenge"];
+                string? codeChallengeMethod = httpContext.Request.Query["code_challenge_method"];
+                var nonce = httpContext.Request.Query["nonce"];
 
-            // TODO: skip checking: client validation, redirect URI, response type, scopes, etc.
+                // simple validation only
+                if (string.IsNullOrWhiteSpace(clientId) ||
+                    string.IsNullOrWhiteSpace(redirectUri) ||
+                    string.IsNullOrWhiteSpace(responseType))
+                {
+                    // todo: return valid openid error response
+                    return Results.BadRequest("Missing required parameters.");
+                }
 
-            if (!httpContext.User.Identity?.IsAuthenticated ?? false)
-            {
-                // go to login page with return URL
-                var loginUrl =
-                    $"/{LoginPath.Trim('/')}?returnUrl={Uri.EscapeDataString(httpContext.Request.Path + httpContext.Request.QueryString)}";
-                return Results.Redirect(loginUrl);
-            }
+                // odd we need these to prevent compiler warning, with the above validation?
+                ArgumentException.ThrowIfNullOrWhiteSpace(clientId);
+                ArgumentException.ThrowIfNullOrWhiteSpace(redirectUri);
+                ArgumentException.ThrowIfNullOrWhiteSpace(responseType);
 
-            // generate an authorization code (this is not secure, demo only)
-            var code = Guid.NewGuid().ToString("n");
+                // TODO: skip checking: client validation, redirect URI, response type, scopes, etc.
 
-            ArgumentException.ThrowIfNullOrWhiteSpace(clientId);
-            ArgumentException.ThrowIfNullOrWhiteSpace(redirectUri);
-            // store code details in memory
-            authRepository.authCodes[code] = new AuthCodeInfo(
-                UserId: httpContext.User.Identity?.Name ?? "unknown",
-                ClientId: clientId!,
-                RedirectUri: redirectUri!,
-                CodeChallenge: codeChallenge ?? "",
-                CodeChallengeMethod: codeChallengeMethod ?? "",
-                CreatedAt: DateTime.UtcNow,
-                Nonce: nonce
-            );
+                if (!httpContext.User.Identity?.IsAuthenticated ?? false)
+                {
+                    // go to login page with return URL
+                    var loginUrl =
+                        $"/{LoginPath.Trim('/')}?returnUrl={Uri.EscapeDataString(httpContext.Request.Path + httpContext.Request.QueryString)}";
+                    return Results.Redirect(loginUrl);
+                }
 
-            // build the redirect URI: redirect_uri?code=xxx&state=xxx
-            var uriBuilder = new UriBuilder(redirectUri!)
-            {
-                Query = $"code={code}" + (string.IsNullOrEmpty(state) ? "" : $"&state={state}")
-            };
+                // generate an authorization code (this is not secure, demo only)
+                var code = Guid.NewGuid().ToString("n");
 
-            // redirect back to the client
-            return Results.Redirect(uriBuilder.Uri.ToString());
-        });
+                ArgumentException.ThrowIfNullOrWhiteSpace(clientId);
+                ArgumentException.ThrowIfNullOrWhiteSpace(redirectUri);
+                // store code details in memory
+                authRepository.authCodes[code] = new AuthCodeInfo(
+                    UserId: httpContext.User.Identity?.Name ?? "unknown",
+                    ClientId: clientId!,
+                    RedirectUri: redirectUri!,
+                    CodeChallenge: codeChallenge ?? "",
+                    CodeChallengeMethod: codeChallengeMethod ?? "",
+                    CreatedAt: DateTime.UtcNow,
+                    Nonce: nonce
+                );
+
+                // build the redirect URI: redirect_uri?code=xxx&state=xxx
+                var uriBuilder = new UriBuilder(redirectUri!)
+                {
+                    Query = $"code={code}" + (string.IsNullOrEmpty(state) ? "" : $"&state={state}")
+                };
+
+                // redirect back to the client
+                return Results.Redirect(uriBuilder.Uri.ToString());
+            });
 
         app.MapPost("/connect/token", async (
-            HttpContext httpContext, 
-            AuthorizationRepository authRepository, 
+            HttpContext httpContext,
+            AuthorizationRepository authRepository,
             WorkflowRunner workflowRunner) =>
         {
-          await workflowRunner.RunAsync<RequestTokenFlow>();
-            // Console.WriteLine(res);
-            
             var form = httpContext.Request.Form;
+
+            var req = new TokenRequest
+            {
+                GrantType = form["grant_type"].ToString(),
+                ClientId = form["client_id"].ToString(),
+                ClientSecret = form["client_secret"].ToString(),
+            };
+
+            // begin testing out using a workflow system
+            // todo: migrate auth code to this pattern and remove this if statement
+            if (req.GrantType == "client_credentials")
+            {
+                var result = await workflowRunner.RunAsync<RequestTokenFlow, TokenRequest>(req);
+
+                // todo: better result types instead of object?
+                if (result is null)
+                {
+                    return Results.BadRequest(new
+                    {
+                        error = "invalid_request",
+                        error_description = "Failed to generate token."
+                    });
+                }
+
+                // todo: this is all fake!
+                return Results.Json(new
+                {
+                    access_token = result,
+                    token_type = "Bearer",
+                    expires_in = 1800, // 30 minutes in seconds
+                    scope = "openid profile"
+                });
+            }
+
             string? grantType = form["grant_type"];
             string? code = form["code"];
             string? redirectUri = form["redirect_uri"];

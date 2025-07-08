@@ -9,6 +9,7 @@ public record TokenRequest
     public string GrantType { get; set; } = "authorization_code";
 
     public required string ClientId { get; set; }
+    public string? ClientSecret { get; set; }
     // public string? CodeVerifier { get; set; }
 }
 

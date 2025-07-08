@@ -9,91 +9,67 @@ namespace Logn.Core.Flows;
 
 public class RequestTokenFlow : IWorkflowDefinition
 {
-    public string Name { get; } = nameof(RequestTokenFlow);
+    public string Name => "request_token";
 
     public IReadOnlyList<IStep> Steps { get; } =
     [
-        new LogStep("Requesting token..."),
-        new SubWorkflowStep(nameof(ClientCredentialsFlow)),
+        new LogStep("Requesting token…"),
+
+        new ConditionalSubWorkflowStep(
+            ctx => ctx.GetInput<TokenRequest>().GrantType == "client_credentials",
+            workflowWhenTrue: nameof(ClientCredentialsFlow),
+            workflowWhenFalse: nameof(UnsupportedGrantTypeFlow)),
+
         new LogStep("Token request completed.")
     ];
 }
 
-public class ClientCredentialsFlow : IWorkflowDefinition
+public sealed class ClientCredentialsFlow : IWorkflowDefinition
 {
     public string Name { get; } = nameof(ClientCredentialsFlow);
 
     public IReadOnlyList<IStep> Steps { get; } =
     [
-        new LogStep("Hello World!"),
-        new CodeStep(ctx =>
-        {
-            var log = ctx.Services?.GetService<ILogger<ClientCredentialsFlow>>();
-            if (log is null)
-            {
-                Console.WriteLine("Hello from inline code at {0}", DateTimeOffset.UtcNow);
-                return;
-            }
-            log?.LogInformation("Hello from inline code at {Time}", DateTimeOffset.UtcNow);
-        }),
-        new LogStep("It is nice to meet you!")
+        new LogStep("Processing client credentials…"),
+        new ValidateClientCredentialsStep(),
+        new EmitTokenStep(),
+        new LogStep("Client credentials processed successfully."),
     ];
 }
 
-// public class ClientCredentialsFlow : WorkflowBase
-// {
-//     protected override void Build(IWorkflowBuilder builder)
-//     {
-//         builder.Root = new Sequence
-//         {
-//             Activities =
-//             {
-//                 new WriteLine("Hello World!"),
-//                 new WriteLine("It is nice to meet you!")
-//             }
-//         };
-//     }
-// }
+file sealed class EmitTokenStep : IStep
+{
+    public ValueTask<IOutcome> ExecuteAsync(
+        WorkflowContext ctx, CancellationToken _)
+    {
+        // todo: implement claims, id_token, and more, this is pretty basic/fake
+        var req = ctx.GetInput<TokenRequest>();
+        var accessTokenBuilder = ctx.Services.GetRequiredService<AccessTokenBuilder>();
+        var token = accessTokenBuilder.BuildToken([]);
 
-// public class RequestTokenFlow : WorkflowBase
-// {
-//     protected override void Build(IWorkflowBuilder builder)
-//     {
-//         builder.Root = new Sequence
-//         {
-//             Activities =
-//             {
-//                 new WriteLine("Requesting token..."),
-//                 // new FlowDecision(),
-//                 new DispatchWorkflow
-//                 {
-//                     WorkflowDefinitionId = new Input<string>(nameof(ClientCredentialsFlow)),
-//                     Input = new Input<IDictionary<string, object>?>(new Dictionary<string, object>
-//                     {
-//                         { "clientId", "your-client-id" },
-//                         { "clientSecret", "your-client-secret" },
-//                         { "scope", "your-scope" }
-//                     }),
-//                     WaitForCompletion = new(true),
-//                 //    RunAsynchronously = true
-//                 },
-//                 new WriteLine("Token request completed.")
-//             }
-//         };
-//     }
-// }
-//
-// public class SendEmailWorkflow : WorkflowBase
-// {
-//     protected override void Build(IWorkflowBuilder builder)
-//     {
-//         builder.Root = new Sequence
-//         {
-//             Activities =
-//             {
-//                 new Start(),
-//                 new Complete(),
-//             }
-//         };
-//     }
-// }
+        ctx.Services.GetRequiredService<ILogger<EmitTokenStep>>()
+            .LogInformation("Generated access token: {Token}", token);
+        
+        ctx.SetOutput(token);
+
+        return ValueTask.FromResult<IOutcome>(new Success());
+    }
+}
+
+public class ValidateClientCredentialsStep : IStep
+{
+    public ValueTask<IOutcome> ExecuteAsync(WorkflowContext context, CancellationToken cancellation = default)
+    {
+        var request = context.GetInput<TokenRequest>();
+        var clientStore = context.Services.GetRequiredService<ClientStore>();
+
+        if (!clientStore.TryGet(request.ClientId, out var clientInfo) || clientInfo == null ||
+            clientInfo.ClientSecret != request.ClientSecret)
+        {
+            return ValueTask.FromResult<IOutcome>(
+                new Failure(new UnauthorizedAccessException("Invalid client credentials.")));
+        }
+
+        return ValueTask.FromResult<IOutcome>(new Success());
+    }
+}
