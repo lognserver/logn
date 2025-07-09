@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		compose.yaml = compose.yaml
 		Dockerfile = Dockerfile
 		..\README.md = ..\README.md
+		Logn\package.json = Logn\package.json
+		Logn\styles.css = Logn\styles.css
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Logn.Flow", "Logn.Flow\Logn.Flow.csproj", "{38A34A63-1C87-4A1F-B84F-622A7EC33878}"

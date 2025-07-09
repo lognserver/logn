@@ -18,7 +18,7 @@ public class RequestTokenFlow : IWorkflowDefinition
         new ConditionalSubWorkflowStep(
             ctx => ctx.GetInput<TokenRequest>().GrantType == "client_credentials",
             workflowWhenTrue: nameof(ClientCredentialsFlow),
-            workflowWhenFalse: nameof(UnsupportedGrantTypeFlow)),
+            workflowWhenFalse: nameof(UnsupportedGrantTypeFlow), waitForResult: true),
 
         new LogStep("Token request completed.")
     ];

@@ -42,7 +42,11 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorizationBuilder().AddPolicy("UserInformation",
     policyBuilder => policyBuilder.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme).RequireAuthenticatedUser());
 
-builder.Services.AddHttpClient<LognClient>();
+builder.Services.AddHttpClient<LognClient>(c =>
+{
+    // don't support slow APIs on my dime
+    c.Timeout = TimeSpan.FromSeconds(3);
+});
 builder.Services.AddOptions()
     .Configure<LognOptions>(builder.Configuration.GetSection("Logn"));
 

@@ -27,7 +27,7 @@ public class SubWorkflowStep(string workflowName, Func<WorkflowContext, object?>
 
         try
         {
-            await runner.RunAsync(_workflowName, null, waitForResult: waitForResult, init: c =>
+            var result = await runner.RunAsync(_workflowName, null, waitForResult: waitForResult, init: c =>
             {
                 // pass the same service provider to the sub-workflow
                 c.Services = sp;
@@ -35,6 +35,11 @@ public class SubWorkflowStep(string workflowName, Func<WorkflowContext, object?>
                 // pass the input to the sub-workflow or use the selector if provided
                 c.Input = inputSelector?.Invoke(ctx) ?? ctx.Input;
             }, ct);
+            
+            if (result is not null && waitForResult)
+            {
+                ctx.SetOutput(result);
+            }
             return new Success();
         }
         catch (Exception ex)

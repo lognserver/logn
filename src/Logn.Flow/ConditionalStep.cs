@@ -94,15 +94,19 @@ public sealed class ConditionalSubWorkflowStep : IStep
 
             var (selected, wait) = _predicate(ctx) ? _trueBranch : _falseBranch;
 
-            if (!string.IsNullOrWhiteSpace(selected))
-                await runner.RunAsync(selected, instanceId: null, waitForResult: wait, init: c =>
-                {
-                    // pass the same service provider to the sub-workflow
-                    c.Services = ctx.Services;
+            var result = await runner.RunAsync(selected, instanceId: null, waitForResult: wait, init: c =>
+            {
+                // pass the same service provider to the sub-workflow
+                c.Services = ctx.Services;
 
-                    // pass the input to the sub-workflow or use the selector if provided
-                    c.Input = _inputSelector?.Invoke(ctx) ?? ctx.Input;
-                }, ct: ct);
+                // pass the input to the sub-workflow or use the selector if provided
+                c.Input = _inputSelector?.Invoke(ctx) ?? ctx.Input;
+            }, ct: ct);
+
+            if (result is not null && wait)
+            {
+                ctx.SetOutput(result);
+            }
 
             return new Success();
         }

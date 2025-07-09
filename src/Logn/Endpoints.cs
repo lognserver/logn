@@ -235,7 +235,7 @@ public static class Endpoints
             // todo: migrate auth code to this pattern and remove this if statement
             if (req.GrantType == "client_credentials")
             {
-                var result = await workflowRunner.RunAsync<RequestTokenFlow, TokenRequest>(req);
+                var result = await workflowRunner.RunAsync<RequestTokenFlow, TokenRequest>(req, wait: true);
 
                 // todo: better result types instead of object?
                 if (result is null)

@@ -76,8 +76,9 @@ internal sealed class StepDispatcher(IPersistenceStore store, IScheduler schedul
 
     private static void TryComplete(WorkflowContext ctx)
     {
-        if (ctx.Items.TryGetValue("__completion__", out var o)
-            && o is TaskCompletionSource<object?> tcs)
+        if ((ctx.Items.Remove("__completion__", out var o) && // ★ atomically remove
+             o is TaskCompletionSource<object?> tcs &&
+             !tcs.Task.IsCompleted))
             tcs.TrySetResult(ctx.Output);
     }
 

@@ -20,6 +20,7 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.2" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.2" />
         <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.6.0" />
+        <PackageReference Include="PureBlazor.Components" Version="0.60.0" />
     </ItemGroup>
 
     <ItemGroup>

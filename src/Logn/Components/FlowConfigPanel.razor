@@ -101,7 +101,20 @@
 
     [Parameter] public OidcFlow Flow { get; set; }
 
-    [Parameter] public string? Authority { get; set; }
+    private string? _authority;
+    [Parameter]
+    public string? Authority
+    {
+        get => _authority;
+        set
+        {
+            if (_authority != value)
+            {
+                _authority = value;
+                _ = AuthorityChanged.InvokeAsync(value);
+            }
+        }
+    }
     [Parameter] public string ClientId { get; set; } = "FakeClientId123";
     [Parameter] public string ClientSecret { get; set; } = "FakeSecret123";
 
